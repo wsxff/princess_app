@@ -1,23 +1,33 @@
-Ext.application({
-    name: 'Sencha',
- 
-    launch: function() {
-        Ext.create("Ext.TabPanel", {
+
+Ext.setup({
+
+    glossOnIcon: false,
+    onReady: function() {
+    	
+    	
+    	
+        Ext.create('Ext.tab.Panel', {
             fullscreen: true,
-            tabBarPosition: 'bottom', //tabBar设在下方
- 
-            items: [
-                {
-                    title: 'Home',
-                    iconCls: 'home', //添加Tab的图标
-                    html: [//添加内容
-                        
-                        '<h1>Welcome to Sencha Touch</h1>',
-                        "<p>You're creating the Getting Started app. This demonstrates how ",
-                        "to use tabs, lists and forms to create a simple app</p>",
-                        '<h2>Sencha Touch (2.0.0pr1)</h2>'
-                    ].join("")
+            tabBar: {
+                docked: 'bottom',
+                layout: {
+                    pack: 'center',
+                    align: 'center'
+                },
+                scrollable: {
+                    direction: 'horizontal',
+                    indicators: false
                 }
+            },
+            ui  : 'light',
+            html: 'top banner<br>main picture<br>menu list',
+            styleHtmlContent: true,
+            items: [
+                { iconCls: 'home', title: '首页' },
+                { iconCls: 'favorites', title: '收藏' },
+                 { iconCls: 'comment',  title: '点评' },
+                { iconCls: 'more',      title: '更多' }
+               
             ]
         });
     }
