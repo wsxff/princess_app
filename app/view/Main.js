@@ -1,8 +1,8 @@
-Ext.define('Princess.view.Main', {
+Ext.define('Gongzhu.view.Main', {
     extend: 'Ext.Container',
     requires: [
-        'Princess.view.PrincessList',
-        'Princess.view.BottomTabs'
+        'Gongzhu.view.PrincessList',
+        'Gongzhu.view.BottomTabs'
     ],
 
     config: {
@@ -10,12 +10,12 @@ Ext.define('Princess.view.Main', {
         layout: 'fit',
         items: [
             {
-                xtype : 'bottomtabs',
-                docked: 'bottom'
-            },
-            {
-                xtype: 'princesspist'
+ html: [
+                        '更多'
+                    ].join("")
             }
+    
         ]
     }
 });
+

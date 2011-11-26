@@ -1,4 +1,4 @@
-Ext.define('Princess.controller.Mains',{
+Ext.define('Gongzhu.controller.Main',{
     extend: 'Ext.app.Controller',
     
     config: {
@@ -16,6 +16,6 @@ Ext.define('Princess.controller.Mains',{
         }
         ],
     init : function(){
-    	 
+    	 this.getMainView().create();
     }
 })
