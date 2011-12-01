@@ -1,22 +1,17 @@
-Ext.define('Gongzhu.view.Main', {
-    extend: 'Ext.Container',
-    requires: [
-       
-    ],
-    config: {
-        fullscreen: true,
-        layout: 'fit',
-        items: [
+Ext.application({
+	name : 'Princess',
 
-            {
-                xtype : 'panel',
+	launch : function() {
+		Ext.create("Ext.TabPanel", {
+			fullscreen : true,
+			tabBarPosition : 'bottom',
+
+			items : [{
+				xtype : 'panel',
 				docked : 'top',
 
 				html : 'banner is img'
-            }, {
-            	xtype:'tabpanel',
-            	tabBarPosition : 'bottom',
-            	items : [{
+			}, {
 
 				xtype : 'list',
 				title : '首页',
@@ -81,13 +76,7 @@ Ext.define('Gongzhu.view.Main', {
 				cls : 'more',
 				html : ['更多'].join("")
 
-			}
-			]
-            	
-            }
-   
-        ]
-    }
-    
+			}]
+		}).setActiveItem(0);
+	}
 });
-
