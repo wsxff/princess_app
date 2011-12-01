@@ -9,12 +9,11 @@ Ext.application({
 			items : [{
 				xtype : 'panel',
 				docked : 'top',
-
-				html : 'banner is img'
+				html : ''
 			}, {
 
 				xtype : 'list',
-				title : '首页',
+				title : '首页1',
 				iconCls : 'home',
 
 				itemTpl : '{title}',

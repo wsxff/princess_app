@@ -1,0 +1,107 @@
+/*顶部logo*/
+
+.x-inner.x-panel-inner .x-innerhtml:last-child
+{
+	background:url("../themes/images/princess/logo.png") no-repeat center center,url("../themes/images/princess/topbg.png") repeat-x center center;
+	background-size:250px auto,auto auto;
+	text-align:center;
+	vertical-align: middle;
+	height:70px;
+}
+
+.x-tabbar.x-docked-bottom {
+	background:#f06c9b;
+	border-top:0em solid;
+	/*height:3em;*/
+	height:70px;
+	padding:0
+}
+
+/*首页中部分类开始*/
+.x-list-item{
+	border:0px;
+}
+.x-list-item:first-child
+{
+	background:url("../themes/images/princess/catalog.png") no-repeat 10px center,url("../themes/images/princess/go.png") no-repeat right center,url("../themes/images/princess/titlebg.png") repeat-x center bottom;
+	height:60px;
+	background-size:50px 50px,15px 30px,50px 60px;
+	padding-left:70px;
+}
+
+.x-list-item:nth-child(2)
+{
+	background:url("../themes/images/princess/function.png") no-repeat 10px center,url("../themes/images/princess/go.png") no-repeat right center,url("../themes/images/princess/titlebg.png") repeat-x center bottom;
+	height:60px;
+	background-size:50px 50px,15px 30px,50px 60px;
+	padding-left:70px;
+}
+
+.x-list-item:nth-child(3)
+{
+	background:url("../themes/images/princess/brand.png") no-repeat 10px center,url("../themes/images/princess/go.png") no-repeat right center,url("../themes/images/princess/titlebg.png") repeat-x center bottom;
+	background-size:50px 50px,15px 30px,50px 60px;
+	height:60px;
+	padding-left:70px;
+}
+
+.x-list-item:last-child
+{
+	background:url("../themes/images/princess/search.png") no-repeat 10px center,url("../themes/images/princess/go.png") no-repeat right center,url("../themes/images/princess/titlebg.png") repeat-x center bottom;
+	height:60px;
+	background-size:50px 50px,15px 30px,50px 60px;
+	padding-left:70px;
+}
+
+/*首页中部分类结束*/
+
+
+/*首页底部开始*/
+/*首页*/
+.x-tab-normal.x-tab .x-button-icon.home
+{
+	background:url("../themes/images/princess/home.png") no-repeat;
+	width:30px;
+	background-size:30px auto;
+}
+
+
+/*收藏*/
+.x-tab-normal.x-tab .x-button-icon.star
+{
+	background:url("../themes/images/princess/like.png") no-repeat;
+	width:30px;
+	background-size:30px auto;
+}
+/*点评*/
+ .x-tab-normal.x-tab .x-button-icon.user
+{
+	background:url("../themes/images/princess/review.png") no-repeat;
+	width:30px;
+	background-size:30px auto;
+}
+/*更多*/
+.x-tab-normal.x-tab .x-button-icon.more
+{
+	background:url("../themes/images/princess/more.png") no-repeat;
+	width:30px;
+	background-size:30px auto;
+}
+.x-button-label{
+	text-align:center;
+	color:#fff;
+	font-weight:bold;
+	line-height:2.2em;
+	display:block;
+	overflow:auto;
+	font-size:.9em;
+}
+
+.x-tabbar-dark.x-docked-bottom .x-tab-active {
+background-image:none;
+background:url("../themes/images/princess/topbg.png") repeat-x;
+background-color : transparent;
+}
+
+
+/*首页底部结束*/
