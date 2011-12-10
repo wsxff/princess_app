@@ -3,10 +3,10 @@ Ext.define('Gongzhu.model.FocusPic', {
     extend: 'Ext.data.Model',
 
     fields: [
-'pic', 'link'
+    'pic', 'link'
     ],
-    
+
     proxy: {        type: 'jsonp',
-    url : 'http://sns.gongzhu.com/index/get_banner.json'
+    url : 'http://blog.dreamlx.net/test.php'
 }
 });

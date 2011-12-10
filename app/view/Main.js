@@ -1,12 +1,33 @@
+Ext.define('CategoryTitle', {
+    extend: 'Ext.data.Model',
+    fields: ['icon','title','etitle','link','desc']
+});
 
-$.getJSON(
-    "http://sns.gongzhu.com/index/get_banner.json?callback=?",
-    function(json){
-        alert(json.pic);
-        store = {"pic":"Apple","link":"Banana"};
+var categorystore = Ext.create('Ext.data.Store', {
+    model: 'CategoryTitle',
+    proxy: {
+        type: 'jsonp',
+        url : 'http://sns.gongzhu.com/index/get_meun.json'
     }
-);
+});
 
+categorystore.load();
+//================
+Ext.define('BannerPic', {
+    extend: 'Ext.data.Model',
+    fields: ['pic','link']
+});
+
+var BannerPicstore = Ext.create('Ext.data.Store', {
+    model: 'BannerPic',
+    proxy: {
+        type: 'jsonp',
+        url : 'http://sns.gongzhu.com/index/get_banner.json'
+    }
+});
+
+BannerPicstore.load();
+//=====================
 
 Ext.define('Gongzhu.view.Main', {
     extend: 'Ext.Container',
@@ -17,6 +38,7 @@ Ext.define('Gongzhu.view.Main', {
     config: {
         fullscreen: true,
         layout: 'hbox',
+        width:640,
         items: [
 
         {
@@ -25,6 +47,7 @@ Ext.define('Gongzhu.view.Main', {
         }, {
             xtype:'tabpanel',
             tabBarPosition : 'bottom',
+            width:640,
             items : [{
 
                 title : '首页',
@@ -32,40 +55,31 @@ Ext.define('Gongzhu.view.Main', {
                 layout:'vbox',
                 items:[
                 {  
-                    html:'focus pic',
-                    flex: 1}
+                    xtype: 'dataview',
+                    store:BannerPicstore,
+                    itemTpl:"<img src='{pic}' />",
+                    flex: 1,
+                    height:300
+                    }
                     ,{
                         xtype: 'list',
 
-disclosure: true,
-onItemDisclosure: {
-    scope: 'test',
-    handler: function(record, btn, index) {
-        alert('active next page ' + record.get('title'));
-    }
-},
-                           itemTpl: '{icon}{title}<br/><small>{subtitle}</small>',
-                           store: {
-                               fields: ['icon','title','subtitle', 'url'],
-                               data: [
-                               {icon: 'iconA',title:'护肤',subtitle:'小护士,牛尔', url: 'ext-scheduler-2-0-upgrading-to-ext-js-4'},
-                               {icon: 'iconB',title:'美白',subtitle:'人参肥皂', url: 'sencha-touch-2-what-to-expect'},
-                               {icon: 'iconC',title:'熬夜',subtitle:'红牛,维生素', url: 'senchacon-2011-now-packed-with-more-goodness'},
-                               {icon: 'iconD',title:'防晒',subtitle:'雪花膏',url: 'new-ext-js-4-documentation-center'}
-                               ,
-                               {icon: 'iconA',title:'护肤',subtitle:'小护士,牛尔', url: 'ext-scheduler-2-0-upgrading-to-ext-js-4'},
-                                  {icon: 'iconB',title:'美白',subtitle:'人参肥皂', url: 'sencha-touch-2-what-to-expect'},
-                                  {icon: 'iconC',title:'熬夜',subtitle:'红牛,维生素', url: 'senchacon-2011-now-packed-with-more-goodness'},
-                                  {icon: 'iconD',title:'防晒',subtitle:'雪花膏',url: 'new-ext-js-4-documentation-center'}
-                               ]
-                           },
+                        disclosure: true,
+                        onItemDisclosure: {
+                            scope: 'test',
+                            handler: function(record, btn, index) {
+                                alert('active next page --' + record.get('link'));
+                            }
+                        },
+                        itemTpl: '<img src="{icon}" width=35 height=35/>{title}{etitle}<br/><small>{desc}</small>',
+                        store: categorystore,
                         flex:5
                         }]
                     }, {
                         title : '收藏',
                         iconCls : 'star',
                         cls : 'home',
-                        html : ['<h1>收藏views</h1>',"需要组合控件，数据关联失败"].join("")
+                        html : 'others'
                     },
                     //this is the new item
                     {
