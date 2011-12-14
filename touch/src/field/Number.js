@@ -3,12 +3,12 @@
  * number input field, most browsers will show a specialized virtual keyboard for entering numbers. The Number field
  * only accepts numerical input and also provides additional spinner UI that increases or decreases the current value
  * by a configured {@link #stepValue step value}. Here's how we might use one in a form:
- * 
+ *
  *     Ext.create('Ext.form.Panel', {
  *         tbar: {
  *             text: 'Register'
  *         },
- *         
+ *
  *         items: [
  *             {
  *                 xtype: 'numberfield',
@@ -19,21 +19,21 @@
  *             }
  *         ]
  *     }).show();
- * 
+ *
  * Or on its own, outside of a form:
- * 
+ *
  *     Ext.create('Ext.field.Number', {
  *         label: 'Age',
  *         value: '26'
  *     }).show();
- * 
+ *
  * ## minValue, maxValue and stepValue
- * 
+ *
  * The {@link #minValue} and {@link #maxValue} configurations are self-explanatory and simply constrain the value
  * entered to the range specified by the configured min and max values. The other option exposed by this component
  * is {@link #stepValue}, which enables you to set how much the value changes every time the up and down spinners
  * are tapped on. For example, to create a salary field that ticks up and down by $1,000 each tap we can do this:
- * 
+ *
  *     Ext.create('Ext.field.Number', {
  *         label: 'Salary',
  *         value: 30000,
@@ -41,29 +41,31 @@
  *         maxValue: 50000,
  *         stepValue: 1000
  *     });
- * 
+ *
  * This creates a field that starts with a value of $30,000, steps up and down in $1,000 increments and will not go
  * beneath $25,000 or above $50,000.
- * 
- * Because number field inherits from {@link Ext.field.Text textfield} it gains all of the functionality that text 
+ *
+ * Because number field inherits from {@link Ext.field.Text textfield} it gains all of the functionality that text
  * fields provide, including getting and setting the value at runtime, validations and various events that are fired as
- * the user interacts with the component. Check out the {@link Ext.field.Text} docs to see the additional functionality 
+ * the user interacts with the component. Check out the {@link Ext.field.Text} docs to see the additional functionality
  * available.
  */
 Ext.define('Ext.field.Number', {
     extend: 'Ext.field.Text',
-    alias : 'widget.numberfield',
+    xtype: 'numberfield',
     alternateClassName: 'Ext.form.Number',
 
     config: {
         // @inherit
-        input: {
+        component: {
             type: 'number'
         },
 
         // @inherit
-        ui: 'number',
+        ui: 'number'
+    },
 
+    proxyConfig: {
         /**
          * @cfg {Number} minValue The minimum value that this Number field can accept
          * @accessor
@@ -88,28 +90,19 @@ Ext.define('Ext.field.Number', {
         var minValue = this.getMinValue(),
             maxValue = this.getMaxValue();
 
-        value = Math.min(Math.max(value, minValue), maxValue);
+        if (Ext.isNumber(minValue)) {
+            value = Math.max(value, minValue);
+        }
+
+        if (Ext.isNumber(maxValue)) {
+            value = Math.min(value, maxValue);
+        }
 
         return parseFloat(value);
     },
 
     getValue: function() {
         var value = this.callParent();
-        return parseFloat(value);
-    },
-
-    // @private
-    updateMinValue: function(newMinValue) {
-        this.getInput().setMinValue(newMinValue);
-    },
-
-    // @private
-    updateMaxValue: function(newMaxValue) {
-        this.getInput().setMaxValue(newMaxValue);
-    },
-
-    // @private
-    updateStepValue: function(newStepValue) {
-        this.getInput().setStepValue(newStepValue);
+        return parseFloat(value || 0);
     }
 });

@@ -12,7 +12,9 @@ Ext.define('Ext.util.SizeMonitor', {
         scope: null
     },
 
-    initialize: function() {
+    constructor: function(config) {
+        this.initConfig(config);
+
         this.doFireSizeChangeEvent = Ext.Function.bind(this.doFireSizeChangeEvent, this);
 
         var me = this,
@@ -110,12 +112,11 @@ Ext.define('Ext.util.SizeMonitor', {
     },
 
     destroyDetector: function(name) {
-        var element = this.getElement(),
-            detector = this.detectors[name],
+        var detector = this.detectors[name],
             listener = this.listeners[name];
 
         detector.removeEventListener('scroll', listener, true);
-        element.dom.removeChild(detector);
+        Ext.removeNode(detector);
     },
 
     destroy: function() {

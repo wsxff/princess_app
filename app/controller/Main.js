@@ -10,7 +10,8 @@ Ext.define('Gongzhu.controller.Main',{
     'CategoryList'
     ],
     stores: [
-        'FocusPicStores'
+        'BannerPicStores',
+        'CategoryTitleStores'
     ],
     refs: [
     {

@@ -60,33 +60,56 @@
  */
 Ext.define('Ext.field.Text', {
     extend: 'Ext.field.Field',
-    alias : 'widget.textfield',
+    xtype: 'textfield',
     alternateClassName: 'Ext.form.Text',
 
     /**
      * @event focus
-     * Fires when this field receives input focus.
+     * Fires when this field receives input focus
      * @param {Ext.field.Text} this This field
      * @param {Ext.event.Event} e
      */
 
     /**
      * @event blur
-     * Fires when this field loses input focus.
+     * Fires when this field loses input focus
+     * @param {Ext.field.Text} this This field
+     * @param {Ext.event.Event} e
+     */
+
+    /**
+     * @event paste
+     * Fires when this field is pasted.
+     * @param {Ext.field.Text} this This field
+     * @param {Ext.event.Event} e
+     */
+
+    /**
+     * @event mousedown
+     * Fires when this field receives a mousedown
      * @param {Ext.field.Text} this This field
      * @param {Ext.event.Event} e
      */
 
     /**
      * @event keyup
-     * Fires when a key is released on the input element.
+     * @preventable doKeyUp
+     * Fires when a key is released on the input element
+     * @param {Ext.field.Text} this This field
+     * @param {Ext.event.Event} e
+     */
+
+    /**
+     * @event clearicontap
+     * @preventable doClearIconTap
+     * Fires when the clear icon is tapped
      * @param {Ext.field.Text} this This field
      * @param {Ext.event.Event} e
      */
 
     /**
      * @event change
-     * Fires just before the field blurs if the field value has changed.
+     * Fires just before the field blurs if the field value has changed
      * @param {Ext.field.Text} this This field
      * @param {Mixed} newValue The new value
      * @param {Mixed} oldValue The original value
@@ -94,6 +117,7 @@ Ext.define('Ext.field.Text', {
 
     /**
      * @event action
+     * @preventable doAction
      * Fires whenever the return key or go is pressed. FormPanel listeners
      * for this event, and submits itself whenever it fires. Also note
      * that this event bubbles up to parent containers.
@@ -106,16 +130,10 @@ Ext.define('Ext.field.Text', {
         ui: 'text',
 
         // @inherit
-        input: {
-            type: 'text'
-        },
-
-        // @inherit
         clearIcon: true,
 
         /**
          * @cfg {String} placeHolder A string value displayed in the input (if supported) when the control is empty.
-         * @deprecated 2.0
          * @accessor
          */
         placeHolder: null,
@@ -145,140 +163,212 @@ Ext.define('Ext.field.Text', {
          * @cfg {Boolean} autoCorrect
          * @accessor
          */
-        autoCorrect: null
+        autoCorrect: null,
+
+        /**
+         * True to set the field DOM element readonly attribute to true.
+         * @cfg {Boolean} readOnly
+         * @accessor
+         */
+        readOnly: null,
+
+        /**
+         * @cfg {Object} component The inner component for this field, which defaults to an input text.
+         */
+        component: {
+            xtype: 'input',
+            type : 'text'
+        }
     },
 
     // @private
     initialize: function() {
-        this.enableBubble('action');
-        this.callParent(arguments);
-
         var me = this;
 
-        me.callParent(arguments);
+        me.callParent();
 
-        me.on({
-            scope: me,
+        me.getComponent().on({
+            scope: this,
 
-            keyup : 'doKeyUp',
-            change: 'doChange'
+            keyup       : 'onKeyUp',
+            change      : 'onChange',
+            focus       : 'onFocus',
+            blur        : 'onBlur',
+            paste       : 'onPaste',
+            mousedown   : 'onMouseDown',
+            clearicontap: 'onClearIconTap'
         });
-
-        me.on({
-            scope   : me,
-            delegate: 'clearicon',
-
-            tap: 'onClearIconTap'
-        });
-
-        this.relayEvents(me.getInput(), [
-            'keyup',
-            'change',
-            'focus',
-            'blur',
-            'paste',
-            'mousedown'
-        ]);
     },
 
-    // @inherit
+    // @private
     updateValue: function(newValue) {
-        this.callParent(arguments);
+        var component = this.getComponent();
+        if (component) {
+            component.setValue(newValue);
+        }
+
         this[newValue ? 'showClearIcon' : 'hideClearIcon']();
+    },
+
+    getValue: function() {
+        var me = this;
+        me._value = me.getComponent().getValue();
+        return me._value;
     },
 
     // @private
     updatePlaceHolder: function(newPlaceHolder) {
-        this.getInput().setPlaceHolder(newPlaceHolder);
+        this.getComponent().setPlaceHolder(newPlaceHolder);
     },
 
     // @private
     updateMaxLength: function(newMaxLength) {
-        this.getInput().setMaxLength(newMaxLength);
+        this.getComponent().setMaxLength(newMaxLength);
     },
 
     // @private
     updateAutoComplete: function(newAutoComplete) {
-        this.getInput().setAutoComplete(newAutoComplete);
+        this.getComponent().setAutoComplete(newAutoComplete);
     },
 
     // @private
     updateAutoCapitalize: function(newAutoCapitalize) {
-        this.getInput().setAutoCapitalize(newAutoCapitalize);
+        this.getComponent().setAutoCapitalize(newAutoCapitalize);
     },
 
     // @private
     updateAutoCorrect: function(newAutoCorrect) {
-        this.getInput().setAutoCorrect(newAutoCorrect);
+        this.getComponent().setAutoCorrect(newAutoCorrect);
     },
 
     // @private
-    doSetDisabled: function(disabled) {
-        this.callParent(arguments);
-
-        if (disabled) {
+    updateReadOnly: function(newReadOnly) {
+        if (newReadOnly) {
             this.hideClearIcon();
         } else {
             this.showClearIcon();
         }
+
+        this.getComponent().setReadOnly(newReadOnly);
     },
 
     // @private
-    onClearIconTap: function() {
-        this.setValue('');
+    updateInputType: function(newInputType) {
+        var component = this.getComponent();
+        if (component) {
+            component.setType(newInputType);
+        }
+    },
+
+    // @private
+    updateName: function(newName) {
+        var component = this.getComponent();
+        if (component) {
+            component.setName(newName);
+        }
+    },
+
+    // @private
+    updateTabIndex: function(newTabIndex) {
+        var component = this.getComponent();
+        if (component) {
+            component.setTabIndex(newTabIndex);
+        }
+    },
+
+    // @inherit
+    doSetDisabled: function(disabled) {
+        var me = this;
+
+        me.callParent(arguments);
+
+        var component = me.getComponent();
+        if (component) {
+            component.setDisabled(disabled);
+        }
+
+        if (disabled) {
+            me.hideClearIcon();
+        } else {
+            me.showClearIcon();
+        }
     },
 
     // @private
     showClearIcon: function() {
-        var me = this,
-            clearIcon = this.getClearIcon();
+        var me = this;
 
-        if (!me.getDisabled() && me.getValue() && clearIcon) {
-            clearIcon.show();
-
-            this.element.addCls(Ext.baseCSSPrefix + 'field-clearable');
+        if (!me.getDisabled() && !me.getReadOnly() && me.getValue() && me.getClearIcon()) {
+            me.element.addCls(Ext.baseCSSPrefix + 'field-clearable');
         }
 
-        return this;
+        return me;
     },
 
     // @private
     hideClearIcon: function() {
-        var clearIcon = this.getClearIcon();
-        if (clearIcon) {
-            clearIcon.hide();
+        if (this.getClearIcon()) {
             this.element.removeCls(Ext.baseCSSPrefix + 'field-clearable');
         }
     },
 
-    doChange: Ext.emptyFn,
+    onKeyUp: function(e) {
+        this.fireAction('keyup', [this, e], 'doKeyUp');
+    },
 
     /**
      * Called when a key has been pressed in the {@link #input}
      * @private
      */
-    doKeyUp: function(e) {
+    doKeyUp: function(me, e) {
         // getValue to ensure that we are in sync with the dom
-        var me = this,
-            value = me.getValue();
+        var value = me.getValue();
 
         // show the {@link #clearIcon} if it is being used
-        this[value ? 'showClearIcon' : 'hideClearIcon']();
+        me[value ? 'showClearIcon' : 'hideClearIcon']();
 
         if (e.browserEvent.keyCode === 13) {
-            me.getInput().blur();
             me.fireAction('action', [me, e], 'doAction');
         }
     },
 
     doAction: Ext.emptyFn,
 
+    onClearIconTap: function(e) {
+        this.fireAction('clearicontap', [this, e], 'doClearIconTap');
+    },
+
+    // @private
+    doClearIconTap: function(me, e) {
+        me.setValue('');
+    },
+
+    onChange: function(me, value, startValue) {
+        me.fireEvent('change', this, value, startValue);
+    },
+
+    onFocus: function(e) {
+        this.fireEvent('focus', this, e);
+    },
+
+    onBlur: function(e) {
+        this.fireEvent('blur', this, e);
+    },
+
+    onPaste: function(e) {
+        this.fireEvent('paste', this, e);
+    },
+
+    onMouseDown: function(e) {
+        this.fireEvent('mousedown', this, e);
+    },
+
     /**
      * Attempts to set the field as the active input focus.
      * @return {Ext.field.Text} This field
      */
     focus: function() {
-        this.getInput().focus();
+        this.getComponent().focus();
         return this;
     },
 
@@ -287,14 +377,27 @@ Ext.define('Ext.field.Text', {
      * @return {Ext.field.Text} This field
      */
     blur: function() {
-        this.getInput().blur();
+        this.getComponent().blur();
         return this;
     },
 
     // @inherit
     reset: function() {
-        this.callParent(arguments);
+        this.getComponent().reset();
+
+        //we need to call this to sync the input with this field
+        this.getValue();
+
         this[this._value ? 'showClearIcon' : 'hideClearIcon']();
+    },
+
+    // @inherit
+    isDirty: function() {
+        var component = this.getComponent();
+        if (component) {
+            return component.isDirty();
+        }
+        return false;
     }
 });
 

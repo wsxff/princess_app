@@ -3,27 +3,27 @@
 /**
  * Most of the visual classes you interact with in Sencha Touch are Components. Every Component in Sencha Touch is a
  * subclass of Ext.Component, which means they can all:
- * 
+ *
  * * Render themselves onto the page using a template
  * * Show and hide themselves at any time
  * * Center themselves on the screen
  * * Enable and disable themselves
- * 
+ *
  * They can also do a few more advanced things:
- * 
+ *
  * * Float above other components (windows, message boxes and overlays)
  * * Change size and position on the screen with animation
  * * Dock other Components inside itself (useful for toolbars)
  * * Align to other components, allow themselves to be dragged around, make their content scrollable & more
- * 
+ *
  * ## Available Components
- * 
+ *
  * There are many components available in Sencha Touch, separated into 4 main groups:
- * 
+ *
  * ### Navigation components
  * * {@link Ext.Toolbar}
  * * {@link Ext.Button}
- * * {@link Ext.NavigationBar}
+ * * {@link Ext.TitleBar}
  * * {@link Ext.SegmentedButton}
  * * {@link Ext.Title}
  * * {@link Ext.Spacer}
@@ -42,7 +42,6 @@
  * * {@link Ext.field.Hidden}
  * * {@link Ext.field.Slider}
  * * {@link Ext.field.Text}
- * * {@link Ext.form.Label}
  * * {@link Ext.picker.Picker}
  * * {@link Ext.picker.Date}
  *
@@ -57,91 +56,91 @@
  * * {@link Ext.Sheet}
  * * {@link Ext.ActionSheet}
  * * {@link Ext.MessageBox}
- * 
- * 
+ *
+ *
  * ## Instantiating Components
- * 
- * Components are created the same way as all other classes in Sencha Touch - using Ext.create. Here's how we can 
+ *
+ * Components are created the same way as all other classes in Sencha Touch - using Ext.create. Here's how we can
  * create a Text field:
- * 
+ *
  *     var panel = Ext.create('Ext.Panel', {
  *         html: 'This is my panel'
  *     });
- * 
- * This will create a {@link Ext.Panel Panel} instance, configured with some basic HTML content. A Panel is just a 
+ *
+ * This will create a {@link Ext.Panel Panel} instance, configured with some basic HTML content. A Panel is just a
  * simple Component that can render HTML and also contain other items. In this case we've created a Panel instance but
- * it won't show up on the screen yet because items are not rendered immediately after being instantiated. This allows 
- * us to create some components and move them around before rendering and laying them out, which is a good deal faster 
+ * it won't show up on the screen yet because items are not rendered immediately after being instantiated. This allows
+ * us to create some components and move them around before rendering and laying them out, which is a good deal faster
  * than moving them after rendering.
- * 
+ *
  * To show this panel on the screen now we can simply add it to the global Viewport:
- * 
+ *
  *     Ext.Viewport.add(panel);
- * 
- * Panels are also Containers, which means they can contain other Components, arranged by a layout. Let's revisit the 
+ *
+ * Panels are also Containers, which means they can contain other Components, arranged by a layout. Let's revisit the
  * above example now, this time creating a panel with two child Components and a hbox layout:
- * 
+ *
  *     @example
  *     var panel = Ext.create('Ext.Panel', {
  *         layout: 'hbox',
- *         
+ *
  *         items: [
  *             {
  *                 xtype: 'panel',
  *                 flex: 1,
  *                 html: 'Left Panel, 1/3rd of total size',
- *        			style: 'background-color: #5E99CC;'
+ *                  style: 'background-color: #5E99CC;'
  *             },
  *             {
  *                 xtype: 'panel',
  *                 flex: 2,
  *                 html: 'Right Panel, 2/3rds of total size',
- *        			style: 'background-color: #759E60;'
+ *                  style: 'background-color: #759E60;'
  *             }
  *         ]
  *     });
- *     
+ *
  *     Ext.Viewport.add(panel);
- * 
- * This time we created 3 Panels - the first one is created just as before but the inner two are declared inline using 
- * an xtype. Xtype is a convenient way of creating Components without having to go through the process of using 
+ *
+ * This time we created 3 Panels - the first one is created just as before but the inner two are declared inline using
+ * an xtype. Xtype is a convenient way of creating Components without having to go through the process of using
  * Ext.create and specifying the full class name, instead you can just provide the xtype for the class inside an object
  * and the framework will create the components for you.
- * 
- * We also specified a layout for the top level panel - in this case hbox, which splits the horizontal width of the 
- * parent panel based on the 'flex' of each child. For example, if the parent Panel above is 300px wide then the first 
- * child will be flexed to 100px wide and the second to 200px because the first one was given flex: 1 and the second 
+ *
+ * We also specified a layout for the top level panel - in this case hbox, which splits the horizontal width of the
+ * parent panel based on the 'flex' of each child. For example, if the parent Panel above is 300px wide then the first
+ * child will be flexed to 100px wide and the second to 200px because the first one was given flex: 1 and the second
  * flex: 2.
- * 
+ *
  * ## Configuring Components
- * 
- * Whenever you create a new Component you can pass in configuration options. All of the configurations for a given 
- * Component are listed in the "Config options" section of its class docs page. You can pass in any number of 
+ *
+ * Whenever you create a new Component you can pass in configuration options. All of the configurations for a given
+ * Component are listed in the "Config options" section of its class docs page. You can pass in any number of
  * configuration options when you instantiate the Component, and modify any of them at any point later. For example, we
  *  can easily modify the {@link Ext.Panel#html html content} of a Panel after creating it:
- * 
+ *
  *     @example miniphone
  *     //we can configure the HTML when we instantiate the Component
  *     var panel = Ext.create('Ext.Panel', {
  *         fullscreen: true,
  *         html: 'This is a Panel'
  *     });
- * 
+ *
  *     //we can update the HTML later using the setHtml method:
  *     panel.setHtml('Some new HTML');
- * 
+ *
  *     //we can retrieve the current HTML using the getHtml method:
  *     alert(panel.getHtml()); //alerts "Some new HTML"
- * 
- * Every config has a getter method and a setter method - these are automatically generated and always follow the same 
- * pattern. For example, a config called 'html' will receive getHtml and setHtml methods, a config called defaultType 
+ *
+ * Every config has a getter method and a setter method - these are automatically generated and always follow the same
+ * pattern. For example, a config called 'html' will receive getHtml and setHtml methods, a config called defaultType
  * will receive getDefaultType and setDefaultType methods, and so on.
- * 
+ *
  * ## Further Reading
- * 
- * See the [Component & Container Guide](#!/guide/components) for more information, and check out the 
+ *
+ * See the [Component & Container Guide](#!/guide/components) for more information, and check out the
  * {@link Ext.Container} class docs also.
- * 
+ *
  */
 Ext.define('Ext.Component', {
 
@@ -155,6 +154,7 @@ Ext.define('Ext.Component', {
         'Ext.ComponentManager',
         'Ext.XTemplate',
         'Ext.dom.Element',
+        'Ext.behavior.Translatable',
         'Ext.behavior.Draggable'
     ],
 
@@ -215,24 +215,12 @@ Ext.define('Ext.Component', {
         styleHtmlCls: clsPrefix + 'html',
 
         /**
-         * @cfg {Boolean} styleHtmlContent
+         * @cfg {Boolean} [styleHtmlContent=false]
          * True to automatically style the html inside the content target of this component (body for panels).
          * @accessor
          */
         styleHtmlContent: null,
 
-        /**
-         * @cfg {Boolean} masked
-         * True to mask this component.
-         * @accessor
-         */
-        masked: null,
-
-        /**
-         * @cfg {Boolean} hidden
-         * True to hide this component
-         * @accessor
-         */
         hidden: false
     },
 
@@ -297,6 +285,12 @@ Ext.define('Ext.Component', {
          */
         centered: null,
 
+        /**
+         * @cfg {Boolean} hidden
+         * Whether or not this component is hidden
+         * @accessor
+         * @evented
+         */
         hidden: null,
 
         /**
@@ -317,7 +311,8 @@ Ext.define('Ext.Component', {
         style: null,
 
         /**
-         * @cfg {String} html Optional HTML content to render inside this Component
+         * @cfg {String/Ext.Element/HTMLElement} html Optional HTML content to render inside this Component, or a reference
+         * to an existing element on the page.
          * @accessor
          */
         html: null,
@@ -327,6 +322,13 @@ Ext.define('Ext.Component', {
          * @accessor
          */
         draggable: null,
+
+        /**
+         * @cfg {Object} translatable
+         * @private
+         * @accessor
+         */
+        translatable: null,
 
         /**
          * @cfg {Object} droppable Configuration options to make this Component droppable
@@ -405,8 +407,47 @@ Ext.define('Ext.Component', {
          * hide the modal mask and the Component when the mask is tapped on
          * @accessor
          */
-        hideOnMaskTap: true
+        hideOnMaskTap: true,
+
+        /**
+         * @cfg {Ext.Element/HTMLElement/String} contentEl The configured element will automatically be added as the content of this
+         * component. When you pass a string, we expect it to be an element id. If the content element is hidden, we will automatically
+         * show it.
+         * @accessor
+         */
+        contentEl: null,
+
+        /**
+         * @cfg {String} itemId
+         * @accessor
+         */
+        itemId: undefined,
+
+        /**
+         * @cfg {Object/Array} plugins
+         * @accessor
+         * An object or array of objects that will provide custom functionality for this component.  The only
+         * requirement for a valid plugin is that it contain an init method that accepts a reference of type Ext.Component.
+         * When a component is created, if any plugins are available, the component will call the init method on each
+         * plugin, passing a reference to itself.  Each plugin can then call methods or respond to events on the
+         * component as needed to provide its functionality.
+         */
+        plugins: null,
+
+        elementListeners: null
     },
+
+    /**
+     * @event painted
+     * Fires whenever the Component is moved into to the DOM body
+     * @param {Ext.Component} this The component instance
+     */
+
+    /**
+     * @event erased
+     * Fires whenever the Component is moved out of the DOM body
+     * @param {Ext.Component} this The component instance
+     */
 
     /**
      * @event show
@@ -418,6 +459,19 @@ Ext.define('Ext.Component', {
      * @event hide
      * Fires whenever the Component is hidden
      * @param {Ext.Component} this The component instance
+     */
+
+    /**
+     * @event fullscreen
+     * Fires whenever a Component with the fullscreen config is instantiated
+     * @param {Ext.Component} this The component instance
+     */
+
+    /**
+     * @event floatingchange
+     * Fires whenever there is a change in the floating status of a component
+     * @param {Ext.Component} this The component instance
+     * @param {Boolean} floating The component's new floating state
      */
 
     /**
@@ -449,21 +503,6 @@ Ext.define('Ext.Component', {
      * @private
      */
     rendered: false,
-
-    /**
-     * @private
-     */
-    maskText: null,
-
-    /**
-     * @private
-     */
-    maskTextCls: clsPrefix + 'mask-msg',
-
-    /**
-     * @private
-     */
-    loadingMask: false,
 
     /**
      * @readonly
@@ -501,7 +540,6 @@ Ext.define('Ext.Component', {
         /**
          * Force the component to take up 100% width and height available, by adding it to {@link Ext.viewport.Viewport}.
          * @cfg {Boolean} fullscren
-         * @deprecated 2.0.0 Please use Ext.Viewport.add instead
          */
         if ('fullscreen' in this.config) {
             this.fireEvent('fullscreen', this);
@@ -554,6 +592,42 @@ Ext.define('Ext.Component', {
         this.parent = parent;
 
         return this;
+    },
+
+    applyElementListeners: function(listeners) {
+        this.element.on(listeners);
+    },
+
+    applyPlugins: function(config) {
+        var ln, i;
+
+        if (!config) {
+            return config;
+        }
+
+        config = [].concat(config);
+
+        for (i = 0, ln = config.length; i < ln; i++) {
+            config[i] = Ext.factory(config[i], 'Ext.plugin.Plugin', null, 'plugin');
+        }
+
+        return config;
+    },
+
+    updatePlugins: function(newPlugins, oldPlugins) {
+        var ln, i;
+
+        if (newPlugins) {
+            for (i = 0, ln = newPlugins.length; i < ln; i++) {
+                newPlugins[i].init(this);
+            }
+        }
+
+        if (oldPlugins) {
+            for (i = 0, ln = oldPlugins.length; i < ln; i++) {
+                Ext.destroy(oldPlugins[i]);
+            }
+        }
     },
 
     updateRenderTo: function(newContainer) {
@@ -635,6 +709,10 @@ Ext.define('Ext.Component', {
         }
     },
 
+    applyStyleHtmlContent: function(config) {
+        return Boolean(config);
+    },
+
     updateStyleHtmlContent: function(styleHtmlContent) {
         var htmlCls = this.getStyleHtmlCls(),
             innerElement = this.innerElement,
@@ -652,6 +730,23 @@ Ext.define('Ext.Component', {
             } else {
                 innerElement.addCls(htmlCls);
             }
+        }
+    },
+
+    applyContentEl: function(contentEl) {
+        if (contentEl) {
+            return Ext.get(contentEl);
+        }
+    },
+
+    updateContentEl: function(newContentEl, oldContentEl) {
+        if (oldContentEl) {
+            oldContentEl.hide();
+            Ext.getBody().append(oldContentEl);
+        }
+        if (newContentEl) {
+            this.setHtml(newContentEl);
+            newContentEl.show();
         }
     },
 
@@ -877,7 +972,7 @@ Ext.define('Ext.Component', {
         var innerHtmlElement = this.innerHtmlElement,
             styleHtmlCls = this.getStyleHtmlCls();
 
-        if (!innerHtmlElement) {
+        if (!innerHtmlElement || !innerHtmlElement.dom || !innerHtmlElement.dom.parentNode) {
             this.innerHtmlElement = innerHtmlElement = this.innerElement.createChild({ cls: 'x-innerhtml ' });
 
             if (this.getStyleHtmlContent()) {
@@ -890,7 +985,13 @@ Ext.define('Ext.Component', {
     },
 
     updateHtml: function(html) {
-        this.getInnerHtmlElement().setHtml(html);
+        var innerHtmlElement = this.getInnerHtmlElement();
+        if (typeof html === 'string') {
+            innerHtmlElement.setHtml(html);
+        } else {
+            innerHtmlElement.setHtml('');
+            innerHtmlElement.append(html);
+        }
     },
 
     applyHidden: function(hidden) {
@@ -961,7 +1062,7 @@ Ext.define('Ext.Component', {
                 tplWriteMode = me.getTplWriteMode();
 
             if (tpl) {
-                tpl[tplWriteMode](me.element, newData);
+                tpl[tplWriteMode](me.getInnerHtmlElement(), newData);
             }
         }
     },
@@ -990,8 +1091,8 @@ Ext.define('Ext.Component', {
         this.element.replaceCls(oldCls, newCls, prefix, suffix);
     },
 
-    getItemId: function() {
-        return this.itemId || this.id;
+    applyItemId: function(itemId) {
+        return itemId || this.getId();
     },
 
     //TODO Deprecate this method name, should have been 'isXtype' (lowercased 't')
@@ -1055,6 +1156,35 @@ alert(t.getXTypes());  // alerts 'component/field/textfield'
 
     getDraggable: function() {
         return this.getDraggableBehavior().getDraggable();
+    },
+
+    getTranslatableBehavior: function() {
+        var behavior = this.translatableBehavior;
+
+        if (!behavior) {
+            behavior = this.translatableBehavior = new Ext.behavior.Translatable(this);
+        }
+
+        return behavior;
+    },
+
+    applyTranslatable: function(config) {
+        this.getTranslatableBehavior().setConfig(config);
+    },
+
+    getTranslatable: function() {
+        return this.getTranslatableBehavior().getTranslatable();
+    },
+
+    translate: function() {
+        var translatable = this.getTranslatable();
+
+        if (!translatable) {
+            this.setTranslatable(true);
+            translatable = this.getTranslatable();
+        }
+
+        translatable.translate.apply(translatable, arguments);
     },
 
     setRendered: function(rendered) {
@@ -1280,102 +1410,6 @@ var owningTabPanel = grid.up('tabpanel');
         return result;
     },
 
-    updateMasked: function(newMasked) {
-        var me          = this,
-            element     = me.element,
-            maskEl      = me.maskEl,
-            loadingMask = me.loadingMask,
-            maskText    = me.maskText,
-            maskTextCls = me.maskTextCls,
-            prefix      = Ext.baseCSSPrefix,
-            cls         = [prefix + 'mask'],
-            children    = [];
-
-        if (newMasked) {
-            if (!maskEl) {
-                //create the maskEl in this components element
-                me.maskEl = element.createChild({
-                    cls: cls.join(' '),
-                    children: [
-                        {
-                            cls: 'x-mask-inner',
-                            children: [
-                                {
-                                    cls: prefix + 'loading-spinner-outer',
-                                    html: Ext.LoadingSpinner
-                                },
-                                {
-                                    cls : prefix + 'mask-msg',
-                                    html: maskText
-                                }
-                            ]
-                        }
-                    ]
-                });
-
-                //check if it is a loadingMask
-                if (loadingMask) {
-                    me.maskEl.addCls(prefix + 'mask-loading');
-                }
-
-                //check if there is maskText, if so, add it as a child
-                if (maskText) {
-                    me.maskEl.addCls(prefix + 'mask-text');
-                }
-            }
-
-            //add the masked cls to this component
-            me.addCls('masked', prefix);
-
-            //show the mask
-            me.maskEl.show();
-        } else if (maskEl) {
-            me.removeCls('masked', prefix);
-            maskEl.hide();
-        }
-    },
-
-    updateMaskText: function(newMaskText) {
-        var me = this,
-            maskEl      = me.maskEl,
-            maskTextCls = me.maskTextCls,
-            el;
-
-        if (newMaskText && maskEl) {
-            el = maskEl.down('.x-mask-msg');
-            el.update(newMaskText);
-
-            maskEl.addCls('x-mask-text');
-        } else if (maskEl) {
-            maskEl.removeCls('x-mask-text');
-        }
-
-        this.maskText = newMaskText;
-    },
-
-    updateLoadingMask: function(newLoadingMask) {
-        var maskText = this.maskText,
-            maskEl = this.maskEl;
-
-        if (newLoadingMask && maskEl) {
-            maskEl.addCls('x-mask-loading');
-        } else if (maskEl) {
-            maskEl.removeCls('x-mask-loading');
-        }
-
-        this.loadingMask = newLoadingMask;
-    },
-
-    mask: function(msg, msgCls, loadingMask) {
-        this.updateLoadingMask(loadingMask);
-        this.updateMaskText(msg);
-        this.updateMasked(true);
-    },
-
-    unmask: function() {
-        this.updateMasked(false);
-    },
-
     /**
      * Destroys this Component. If it is currently added to a Container it will first be removed from that Container.
      * All Ext.Element references are also deleted and the Component is de-registered from Ext.ComponentManager
@@ -1403,8 +1437,6 @@ var owningTabPanel = grid.up('tabpanel');
     }
 
 }, function() {
-    Ext.LoadingSpinner = '<div class="x-loading-spinner"><span class="x-loading-top"></span><span class="x-loading-right"></span><span class="x-loading-bottom"></span><span class="x-loading-left"></span></div>';
-
    //<deprecated product=touch since=2.0>
     var emptyFn = Ext.emptyFn;
 
@@ -1420,11 +1452,20 @@ var owningTabPanel = grid.up('tabpanel');
                     config.disabled = !config.enabled;
                 }
 
-                if (config.scroll || this.config.scroll) {
+                if ((config.scroll || this.config.scroll || this.scrollable || this.config.scrollable) && !this.isContainer) {
                     //<debug warn>
-                    Ext.Logger.deprecate("'scroll' config is deprecated, please use 'scrollable' config instead", this);
+                    Ext.Logger.deprecate("You are no longer able to scroll a component. Please use a Ext.Container instead.", this);
                     //</debug>
-                    config.scrollable = config.scroll || this.config.scroll;
+                    delete config.scrollable;
+                    delete config.scroll;
+                }
+
+                if (config.dock) {
+                    //<debug warn>
+                    Ext.Logger.deprecate("'dock' config for docked items is deprecated, please use 'docked' instead");
+                    //</debug>
+                    config.docked = config.dock;
+                    delete config.dock;
                 }
 
                 /**
@@ -1486,14 +1527,16 @@ var owningTabPanel = grid.up('tabpanel');
         initComponent: emptyFn,
 
         show: function() {
-            var containerDom = this.renderElement.dom.parentNode;
+            if (this.renderElement.dom) {
+                var containerDom = this.renderElement.dom.parentNode;
 
-            if (containerDom && containerDom.nodeType == 11) {
-                //<debug warn>
-                Ext.Logger.deprecate("Showing a component that currently doesn't have any container, " +
-                    "please use Ext.Viewport.add() to add this component to the viewport", this);
-                //</debug>
-                Ext.Viewport.add(this);
+                if (containerDom && containerDom.nodeType == 11) {
+                    //<debug warn>
+                    Ext.Logger.deprecate("Showing a component that currently doesn't have any container, " +
+                        "please use Ext.Viewport.add() to add this component to the viewport", this);
+                    //</debug>
+                    Ext.Viewport.add(this);
+                }
             }
 
             return this.callParent(arguments);

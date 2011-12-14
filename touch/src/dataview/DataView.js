@@ -50,7 +50,7 @@
  *
  * This will get the first record in the Store (Jamie), change the age to 42 and automatically update what's on the
  * screen.
- * 
+ *
  *     @example miniphone
  *     var touchTeam = Ext.create('Ext.DataView', {
  *         fullscreen: true,
@@ -67,12 +67,12 @@
  *
  *         itemTpl: '<div>{name} is {age} years old</div>'
  *     });
- * 
+ *
  *     touchTeam.getStore().add({
  *         name: 'Abe Elias',
  *         age: 33
  *     });
- *     
+ *
  *     touchTeam.getStore.getAt(0).set('age', 42);
  *
  * # Loading data from a server
@@ -111,7 +111,7 @@
  * JSON and that the tweets can be found in the 'results' part of the JSON response.
  *
  * The last thing we did is update our template to render the image, twitter username and message. All we need to do
- * now is add a little CSS to style the list the way we want it and we end up with a very basic twitter viewer. Click 
+ * now is add a little CSS to style the list the way we want it and we end up with a very basic twitter viewer. Click
  * the preview button on the example above to see it in action.
  */
 Ext.define('Ext.dataview.DataView', {
@@ -127,6 +127,75 @@ Ext.define('Ext.dataview.DataView', {
         'Ext.data.StoreManager'
     ],
 
+    /**
+     * @event itemtouchstart
+     * Fires whenever an item is touched
+     * @param {Ext.dataview.DataView} this
+     * @param {Number} index The index of the item touched
+     * @param {HTMLElement} target The element touched
+     * @param {Ext.EventObject} e The event object
+     */
+
+    /**
+     * @event itemtouchend
+     * Fires whenever an item is touched
+     * @param {Ext.dataview.DataView} this
+     * @param {Number} index The index of the item touched
+     * @param {HTMLElement} target The element touched
+     * @param {Ext.EventObject} e The event object
+     */
+
+    /**
+     * @event itemtap
+     * Fires whenever an item is tapped
+     * @param {Ext.dataview.DataView} this
+     * @param {Number} index The index of the item tapped
+     * @param {HTMLElement} target The element tapped
+     * @param {Ext.EventObject} e The event object
+     */
+
+    /**
+     * @event itemdoubletap
+     * Fires whenever an item is doubletapped
+     * @param {Ext.dataview.DataView} this
+     * @param {Number} index The index of the item doubletapped
+     * @param {HTMLElement} target The element doubletapped
+     * @param {Ext.EventObject} e The event object
+     */
+
+    /**
+     * @event itemswipe
+     * Fires whenever an item is swiped
+     * @param {Ext.dataview.DataView} this
+     * @param {Number} index The index of the item doubletapped
+     * @param {HTMLElement} target The element doubletapped
+     * @param {Ext.EventObject} e The event object
+     */
+
+    /**
+     * @event select
+     * @preventable doItemSelect
+     * Fires whenever an item is selected
+     * @param {Ext.dataview.DataView} this
+     * @param {Ext.data.Model} record The record assisciated to the item
+     */
+
+    /**
+     * @event deselect
+     * @preventable doItemDeSelect
+     * Fires whenever an item is deselected
+     * @param {Ext.dataview.DataView} this
+     * @param {Ext.data.Model} record The record assisciated to the item
+     * @param {Boolean} supressed Flag to supress the event
+     */
+
+    /**
+     * @event refresh
+     * @preventable doRefresh
+     * Fires whenever the DataView is refreshed
+     * @param {Ext.dataview.DataView} this
+     */
+
     config: {
         /**
          * @cfg {Ext.data.Store/Object} store
@@ -139,6 +208,17 @@ Ext.define('Ext.dataview.DataView', {
 
         // @inherit
         baseCls: Ext.baseCSSPrefix + 'dataview',
+
+        /**
+         * @cfg {String} emptyText
+         * The text to display in the view when there is no data to display
+         */
+        emptyText: null,
+
+        /**
+         * @cfg {Boolean} deferEmptyText True to defer emptyText being applied until the store's first load
+         */
+        deferEmptyText: true,
 
         /**
          * @cfg {String/String[]/Ext.XTemplate} itemTpl
@@ -286,6 +366,8 @@ Ext.define('Ext.dataview.DataView', {
     storeEventHooks: {
         beforeload: 'onBeforeLoad',
         load      : 'refresh',
+        sort      : 'refresh',
+        filter    : 'refresh',
         add       : 'onStoreAdd',
         remove    : 'onStoreRemove',
         update    : 'onStoreUpdate',
@@ -328,18 +410,24 @@ Ext.define('Ext.dataview.DataView', {
 
     //@private
     initialize: function() {
+        this.callParent();
         this.doInitialize();
-        this.callParent(arguments);
     },
 
     // apply to the selection model to maintain visual UI cues
     onItemTrigger: function(e) {
-        this.selectWithEvent(this.getStore().getAt(e.getTarget().getAttribute('itemIndex')), e);
+        var me = this,
+            target = e.getTarget(),
+            index = me.getViewItems().indexOf(target);
+        this.selectWithEvent(this.getStore().getAt(index));
     },
 
     // apply to the selection model to maintain visual UI cues
-    onContainerTrigger: function() {
+    onContainerTrigger: function(e) {
         var me = this;
+        if (e.target != me.element.dom) {
+            return;
+        }
         if (me.getDeselectOnContainerClick() && me.getStore()) {
             me.deselectAll();
         }
@@ -354,7 +442,7 @@ Ext.define('Ext.dataview.DataView', {
     onItemTouchStart: function(e) {
         var me = this,
             target = e.getTarget(),
-            index = target.getAttribute('itemIndex'),
+            index = me.getViewItems().indexOf(target),
             store = me.getStore(),
             record = store && store.getAt(index),
             pressedDelay = me.getPressedDelay(),
@@ -375,15 +463,13 @@ Ext.define('Ext.dataview.DataView', {
             single: true
         });
 
-        me.fireAction('itemtouchstart', [me, index, target, e], 'doItemTouchStart');
+        me.fireEvent('itemtouchstart', me, index, target, e);
     },
-
-    doItemTouchStart: Ext.emptyFn,
 
     onItemTouchEnd: function(e) {
         var me = this,
             target = e.getTarget(),
-            index = target.getAttribute('itemIndex'),
+            index = me.getViewItems().indexOf(target),
             store = me.getStore(),
             record = store && store.getAt(index),
             item = Ext.get(target);
@@ -402,15 +488,13 @@ Ext.define('Ext.dataview.DataView', {
             scope   : me
         });
 
-        me.fireAction('itemtouchend', [me, index, target, e], 'doItemTouchEnd');
+        me.fireEvent('itemtouchend', me, index, target, e);
     },
-
-    doItemTouchEnd: Ext.emptyFn,
 
     onItemTouchMove: function(e) {
         var me = this,
             target = e.getTarget(),
-            index = target.getAttribute('itemIndex'),
+            index = me.getViewItems().indexOf(target),
             store = me.getStore(),
             record = store && store.getAt(index),
             item = Ext.get(target);
@@ -428,35 +512,29 @@ Ext.define('Ext.dataview.DataView', {
     onItemTap: function(e) {
         var me = this,
             target = e.getTarget(),
-            index = target.getAttribute('itemIndex'),
+            index = me.getViewItems().indexOf(target),
             item = Ext.get(target);
 
-        me.fireAction('itemtap', [me, index, item, e], 'doItemTap');
+        me.fireEvent('itemtap', me, index, item, e);
     },
-
-    doItemTap: Ext.emptyFn,
 
     onItemDoubleTap: function(e) {
         var me = this,
             target = e.getTarget(),
-            index = target.getAttribute('itemIndex'),
+            index = me.getViewItems().indexOf(target),
             item = Ext.get(target);
 
-        me.fireAction('itemdoubletap', [me, index, item, e], 'doItemDoubleTap');
+        me.fireEvent('itemdoubletap', me, index, item, e);
     },
-
-    doItemDoubleTap: Ext.emptyFn,
 
     onItemSwipe: function(e) {
         var me = this,
             target = e.getTarget(),
-            index = target.getAttribute('itemIndex'),
+            index = me.getViewItems().indexOf(target),
             item = Ext.get(target);
 
-        me.fireAction('itemswipe', [me, index, item, e], 'doItemSwipe');
+        me.fireEvent('itemswipe', me, index, item, e);
     },
-
-    doItemSwipe: Ext.emptyFn,
 
     // invoked by the selection model to maintain visual UI cues
     onItemSelect: function(record, suppressEvent) {
@@ -482,11 +560,11 @@ Ext.define('Ext.dataview.DataView', {
             me.doItemDeSelect(me, record);
         }
         else {
-            me.fireAction('deselect', [me, record, suppressEvent], 'doItemDeSelect');
+            me.fireAction('deselect', [me, record, suppressEvent], 'doItemDeselect');
         }
     },
 
-    doItemDeSelect: function(me, record) {
+    doItemDeselect: function(me, record) {
         var item = Ext.get(me.getViewItems()[me.getStore().indexOf(record)]);
         if (item) {
             item.removeCls([me.getPressedCls(), me.getSelectedCls()]);
@@ -506,16 +584,12 @@ Ext.define('Ext.dataview.DataView', {
 
     applyStore: function(store) {
         var me = this,
-            loadMask = me.loadMask,
             bindEvents = Ext.apply({}, me.storeEventHooks, { scope: me });
 
         if (store) {
             store = Ext.data.StoreManager.lookup(store);
             if (store && Ext.isObject(store) && store.isStore) {
                 store.on(bindEvents);
-                if (loadMask) {
-                    loadMask.bindStore(store);
-                }
             }
         }
 
@@ -524,7 +598,6 @@ Ext.define('Ext.dataview.DataView', {
 
     updateStore: function(newStore, oldStore) {
         var me = this,
-            loadMask = me.loadMask,
             bindEvents = Ext.apply({}, me.storeEventHooks, { scope: me });
 
         if (oldStore && Ext.isObject(oldStore) && oldStore.isStore) {
@@ -539,16 +612,20 @@ Ext.define('Ext.dataview.DataView', {
         if (newStore) {
             me.refresh();
         }
-        else if (loadMask) {
-            loadMask.bindStore(null);
-        }
     },
 
     onBeforeLoad: function() {
         var loadingText = this.getLoadingText();
         if (loadingText) {
-            this.mask(loadingText, null, true);
+            this.setMask({
+                xtype: 'loadmask',
+                message: loadingText
+            });
         }
+    },
+
+    updateEmptyText: function() {
+        this.refresh();
     },
 
     /**
@@ -558,11 +635,15 @@ Ext.define('Ext.dataview.DataView', {
         var me = this;
 
         //remove any masks on the store
-        this.unmask();
+        this.setMask(false);
 
         if (!me.getStore()) {
+            if (!this.getDeferEmptyText()) {
+                this.doEmptyText();
+            }
             return;
         }
+
         me.fireAction('refresh', [me], 'doRefresh');
     },
 
@@ -577,28 +658,26 @@ Ext.define('Ext.dataview.DataView', {
     },
 
     updateListItem: function(record, item) {
+        var data = record.getData();
+
         if (record) {
             // TODO: Move this into nestedStore...
-            Ext.apply(record.data, this.self.prepareAssociatedData(record));
+            Ext.apply(data, this.self.prepareAssociatedData(record));
         }
-        var index = this.getStore().indexOf(record),
-            html;
 
-        item.setAttribute('itemIndex', index);
-        html = this.getItemTpl().apply(record.data);
-        item.innerHTML = html;
-        // TODO: We may need to account for headers here in List
+        item.innerHTML = this.getItemTpl().apply(data);
     },
 
     addListItem: function(index, record) {
+        var data = record.getData();
+
         if (record) {
             // TODO: Move this into nestedStore...
-            Ext.apply(record.data, this.self.prepareAssociatedData(record));
+            Ext.apply(data, this.self.prepareAssociatedData(record));
         }
         var element = this.elementContainer.element,
             childNodes = element.dom.childNodes,
             ln = childNodes.length,
-            data = record.data,
             wrapElement;
 
         wrapElement = Ext.Element.create(this.getItemElementConfig(index, data));
@@ -613,7 +692,6 @@ Ext.define('Ext.dataview.DataView', {
     getItemElementConfig: function(index, data) {
         return {
             cls: this.getBaseCls() + '-item',
-            itemIndex: index,
             html: this.getItemTpl().apply(data)
         };
     },
@@ -629,6 +707,17 @@ Ext.define('Ext.dataview.DataView', {
             item = items[from + i];
             item.parentNode.removeChild(item);
         }
+        if (me.getViewItems().length == 0) {
+            this.doEmptyText();
+        }
+    },
+
+    doEmptyText: function() {
+        var emptyText = this.getEmptyText();
+        if (emptyText) {
+            this.elementContainer.setHtml('');
+            this.elementContainer.setHtml(emptyText);
+        }
     },
 
     // Add
@@ -637,6 +726,10 @@ Ext.define('Ext.dataview.DataView', {
             ln = records.length,
             i = 0,
             record;
+
+        if (me.getEmptyText() && me.getViewItems().length == 0) {
+            this.elementContainer.setHtml('');
+        }
 
         for (; i < ln; i++) {
             record = records[i];
@@ -648,7 +741,9 @@ Ext.define('Ext.dataview.DataView', {
         if (!this.elementContainer) {
             this.elementContainer = this.add(new Ext.Component());
         }
-        return this.elementContainer.element.dom.childNodes;
+
+        // Transform ChildNodes into a proper Array so we can do indexOf...
+        return Array.prototype.slice.call(this.elementContainer.element.dom.childNodes);
     },
 
     doRefresh: function(me) {
@@ -658,7 +753,12 @@ Ext.define('Ext.dataview.DataView', {
             recordsLn = records.length,
             itemsLn = items.length,
             deltaLn = recordsLn - itemsLn,
+            scrollable = me.getScrollable(),
             i, item;
+
+        if (scrollable) {
+            scrollable.getScroller().scrollTo(0, 0);
+        }
 
         // No items, hide all the items from the collection.
         if (recordsLn < 1) {
@@ -669,7 +769,9 @@ Ext.define('Ext.dataview.DataView', {
         // Too many items, hide the unused ones
         if (deltaLn < 0) {
             this.moveItemsToCache(itemsLn + deltaLn, itemsLn - 1);
-            return;
+            // Items can changed, we need to refresh our references
+            items = me.getViewItems();
+            itemsLn = items.length;
         }
         // Not enough items, create new ones
         else if (deltaLn > 0) {
@@ -690,7 +792,9 @@ Ext.define('Ext.dataview.DataView', {
     onStoreClear: function() {
         var me = this,
             items = me.getViewItems();
+
         this.moveItemsToCache(0, items.length - 1);
+        this.doEmptyText();
     },
 
     // private

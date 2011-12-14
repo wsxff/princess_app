@@ -1,33 +1,4 @@
-Ext.define('CategoryTitle', {
-    extend: 'Ext.data.Model',
-    fields: ['icon','title','etitle','link','desc']
-});
 
-var categorystore = Ext.create('Ext.data.Store', {
-    model: 'CategoryTitle',
-    proxy: {
-        type: 'jsonp',
-        url : 'http://sns.gongzhu.com/index/get_meun.json'
-    }
-});
-
-categorystore.load();
-//================
-Ext.define('BannerPic', {
-    extend: 'Ext.data.Model',
-    fields: ['pic','link']
-});
-
-var BannerPicstore = Ext.create('Ext.data.Store', {
-    model: 'BannerPic',
-    proxy: {
-        type: 'jsonp',
-        url : 'http://sns.gongzhu.com/index/get_banner.json'
-    }
-});
-
-BannerPicstore.load();
-//=====================
 
 Ext.define('Gongzhu.view.Main', {
     extend: 'Ext.Container',
@@ -56,7 +27,7 @@ Ext.define('Gongzhu.view.Main', {
                 items:[
                 {  
                     xtype: 'dataview',
-                    store:BannerPicstore,
+                    store:'BannerPicStores',
                     itemTpl:"<img src='{pic}' />",
                     flex: 1,
                     height:300
@@ -72,7 +43,7 @@ Ext.define('Gongzhu.view.Main', {
                             }
                         },
                         itemTpl: '<img src="{icon}" width=35 height=35/>{title}{etitle}<br/><small>{desc}</small>',
-                        store: categorystore,
+                        store: 'CategoryTitleStores',
                         flex:5
                         }]
                     }, {

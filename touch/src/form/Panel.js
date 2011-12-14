@@ -92,7 +92,7 @@
  * There are a few ways to submit form data. In our example above we have a Model instance that we have updated, giving
  * us the option to use the Model's {@link Ext.data.Model#save save} method to persist the changes back to our server,
  * without using a traditional form submission. Alternatively, we can send a normal browser form submit using the
- * {@link #submit} method:
+ * {@link #method-submit} method:
  *
  *     form.submit({
  *         url: 'url/to/submit/to',
@@ -103,7 +103,7 @@
  *     });
  *
  * In this case we provided the url to submit the form to inside the submit call - alternatively you can just set the
- * {@link #url} configuration when you create the form. We can specify other parameters (see {@link #submit} for a
+ * {@link #url} configuration when you create the form. We can specify other parameters (see {@link #method-submit} for a
  * full list), including callback functions for success and failure, which are called depending on whether or not the
  * form submission was successful. These functions are usually used to take some action in your app after your data
  * has been saved to the server side.
@@ -112,17 +112,20 @@ Ext.define('Ext.form.Panel', {
     alternateClassName: 'Ext.form.FormPanel',
     extend  : 'Ext.Panel',
     xtype   : 'formpanel',
-    requires: ['Ext.XTemplate', 'Ext.field.Checkbox'],
+    requires: ['Ext.XTemplate', 'Ext.field.Checkbox', 'Ext.Ajax'],
 
     /**
      * @event submit
+     * @preventable doSubmit
      * Fires upon successful (Ajax-based) form submission
      * @param {Ext.form.Panel} this This FormPanel
      * @param {Object} result The result object as returned by the server
+     * @param {Ext.EventObject} e The event object
      */
 
     /**
      * @event beforesubmit
+     * @preventable doBeforeSubmit
      * Fires immediately preceding any Form submit action.
      * Implementations may adjust submitted form values or options prior to execution.
      * A return value of <tt>false</tt> from this listener will abort the submission
@@ -213,6 +216,7 @@ Ext.define('Ext.form.Panel', {
     // @private
     initialize: function() {
         var me = this;
+        me.callParent();
 
         me.on({
             action: 'onFieldAction',
@@ -223,8 +227,6 @@ Ext.define('Ext.form.Panel', {
             submit: 'onSubmit',
             scope : this
         });
-
-        me.callParent(arguments);
     },
 
     /**
@@ -261,14 +263,19 @@ Ext.define('Ext.form.Panel', {
     // @private
     onSubmit: function(e) {
         var me = this;
-        if (!me.getStandardSubmit() || me.fireAction('submit', [me, me.getValues(true)], 'doSubmit') === false) {
-            if (e) {
-                e.stopEvent();
-            }
+        if (e && !me.getStandardSubmit()) {
+            e.stopEvent();
         }
+
+        me.fireAction('submit', [me, me.getValues(true), e], 'doSubmit');
+
     },
 
-    doSubmit: Ext.emptyFn,
+    doSubmit: function(me, values, e) {
+        if (e) {
+            e.stopEvent();
+        }
+    },
 
     // @private
     onFieldAction: function(field) {
@@ -374,61 +381,70 @@ Ext.define('Ext.form.Panel', {
 
         formValues = me.getValues(me.getStandardSubmit() || !options.submitDisabled);
 
+        return me.fireAction('beforesubmit', [me, formValues, options], 'doBeforeSubmit');
+    },
+
+    doBeforeSubmit: function(me, formValues, options) {
+        var form = me.element.dom || {};
+
         if (me.getStandardSubmit()) {
             if (options.url && Ext.isEmpty(form.action)) {
                 form.action = options.url;
             }
 
             form.method = (options.method || form.method).toLowerCase();
-
-            if (me.fireEvent('beforesubmit', me, formValues, options) !== false) {
-                form.submit();
-            }
+            form.submit();
         }
         else {
-            if (me.fireEvent('beforesubmit', me, formValues, options) !== false) {
-                if (options.waitMsg) {
-                    me.showMask(options.waitMsg);
-                }
+            if (options.waitMsg) {
+                me.showMask(options.waitMsg);
+            }
 
-                return Ext.Ajax.request({
-                    url: options.url,
-                    method: options.method,
-                    rawData: Ext.urlEncode(Ext.apply(
-                        Ext.apply({}, me.getBaseParams() || {}),
-                        options.params || {},
-                        formValues
-                    )),
-                    autoAbort: options.autoAbort,
-                    headers: Ext.apply(
-                        {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
-                        options.headers || {}),
-                    scope    : me,
-                    callback: function(callbackOptions, success, response) {
-                        var me = this,
-                            responseText = response.responseText;
+            return Ext.Ajax.request({
+                url: options.url,
+                method: options.method,
+                rawData: Ext.urlEncode(Ext.apply(
+                    Ext.apply({}, me.getBaseParams() || {}),
+                    options.params || {},
+                    formValues
+                )),
+                autoAbort: options.autoAbort,
+                headers: Ext.apply(
+                    {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                    options.headers || {}
+                ),
+                scope: me,
+                callback: function(callbackOptions, success, response) {
+                    var me = this,
+                        responseText = response.responseText,
+                        failureFn;
 
-                        me.hideMask();
+                    me.hideMask();
 
-                        if (success) {
-                            response = Ext.decode(responseText);
-                            success = !!response.success;
-                            if (success) {
-                                if (Ext.isFunction(options.success)) {
-                                    options.success.call(options.scope || me, me, response, responseText);
-                                }
-                                me.fireEvent('submit', me, response);
-                            }
+                    failureFn = function() {
+                        if (Ext.isFunction(options.failure)) {
+                            options.failure.call(options.scope || me, me, response, responseText);
                         }
-                        else {
-                            if (Ext.isFunction(options.failure)) {
-                                options.failure.call(options.scope || me, me, response, responseText);
+                        me.fireEvent('exception', me, response);
+                    };
+
+                    if (success) {
+                        response = Ext.decode(responseText);
+                        success = !!response.success;
+                        if (success) {
+                            if (Ext.isFunction(options.success)) {
+                                options.success.call(options.scope || me, me, response, responseText);
                             }
-                            me.fireEvent('exception', me, response);
+                            me.fireEvent('submit', me, response);
+                        } else {
+                            failureFn();
                         }
                     }
-                });
-            }
+                    else {
+                        failureFn();
+                    }
+                }
+            });
         }
     },
 
@@ -488,11 +504,13 @@ Ext.define('Ext.form.Panel', {
                 value = values[name];
                 if (field) {
                     if (Ext.isArray(field)) {
-                        field.forEach(function(field) {
-                            if (Ext.isArray(values[name])) {
-                                field.setChecked((value.indexOf(field.getValue()) != -1));
+                        field.forEach(function(f) {
+                            if (f.isRadio) {
+                                f.setGroupValue(value);
+                            } else if (Ext.isArray(values[name])) {
+                                f.setChecked((value.indexOf(f.getValue()) != -1));
                             } else {
-                                field.setChecked((value == field.getValue()));
+                                f.setChecked((value == f.getValue()));
                             }
                         });
                     } else {
@@ -530,27 +548,43 @@ Ext.define('Ext.form.Panel', {
     getValues: function(enabled) {
         var fields = this.getFields(),
             values = {},
-            field, name;
+            field, name, ln, i;
 
         for (name in fields) {
             if (fields.hasOwnProperty(name)) {
                 if (Ext.isArray(fields[name])) {
                     values[name] = [];
 
-                    fields[name].forEach(function(field) {
-                        if (field.getChecked() && !(enabled && field.getDisabled())) {
-                            if (field instanceof Ext.field.Radio) {
-                                values[name] = field.getValue();
+                    ln = fields[name].length;
+
+                    for (i = 0; i < ln; i++) {
+                        field = fields[name][i];
+
+                        if (!field.getChecked) {
+                            values[name] = field.getValue();
+
+                            //<debug>
+                            throw new Error("Ext.form.Panel: [getValues] You have multiple fields with the same 'name' configuration of '" + name + "' in your form panel (#" + this.id + ").");
+                            //</debug>
+
+                            break;
+                        }
+
+                        if (!(enabled && field.getDisabled())) {
+                            if (field.isRadio) {
+                                values[name] = field.getGroupValue();
                             } else {
                                 values[name].push(field.getValue());
                             }
                         }
-                    });
+
+
+                    }
                 } else {
                     field = fields[name];
 
                     if (!(enabled && field.getDisabled())) {
-                        if (field instanceof Ext.field.Checkbox) {
+                        if (field.isCheckbox) {
                             values[name] = (field.getChecked()) ? field.getValue() : null;
                         } else {
                             values[name] = field.getValue();
@@ -694,9 +728,11 @@ Ext.define('Ext.form.Panel', {
      * @return {Ext.form.Panel} this
      */
     hideMask: function() {
-        var me = this;
-        if (me.getMaskTarget()) {
-            me.maskTarget.unmask();
+        var me = this,
+            maskTarget = me.getMaskTarget();
+
+        if (maskTarget) {
+            maskTarget.unmask();
             me.setMaskTarget(null);
         }
         return me;
@@ -723,7 +759,7 @@ Ext.define('Ext.form.Panel', {
              * @cfg {Ext.dom.Element} waitMsgTarget The target of any mask shown on this form.
              * @deprecated 2.0.0 Please use {@link #maskTarget} instead
              */
-            if (config.hasOwnProperty('waitMsgTarget')) {
+            if (config && config.hasOwnProperty('waitMsgTarget')) {
                 config.maskTarget = config.waitMsgTarget;
                 delete config.waitMsgTarget;
             }

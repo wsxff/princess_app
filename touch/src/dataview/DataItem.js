@@ -1,17 +1,17 @@
 /**
- * A DataItem is a container for {@link Ext.dataview.ComponentView ComponentViews}. It ties together 
+ * A DataItem is a container for {@link Ext.dataview.ComponentView ComponentViews}. It ties together
  * {@link Ext.data.Model records} to its contained Components via a {@link #dataMap dataMap} configuration.
  *
  * For example, lets say you have a `text configuration which, when applied, gets turned into an instance of an
- * Ext.Component. We want to update the {@link #html} of a sub-component when the 'text' field of the record gets 
+ * Ext.Component. We want to update the {@link #html} of a sub-component when the 'text' field of the record gets
  * changed.
- * 
- * As you can see below, it is simply a matter of setting the key of the object to be the getter of the config 
- * (getText), and then give that property a value of an object, which then has 'setHtml' (the html setter) as the key, 
+ *
+ * As you can see below, it is simply a matter of setting the key of the object to be the getter of the config
+ * (getText), and then give that property a value of an object, which then has 'setHtml' (the html setter) as the key,
  * and 'text' (the field name) as the value. You can continue this for a as many sub-components as you wish.
  *
  *        dataMap: {
- *           // When the record is updated, get the text configuration, and 
+ *           // When the record is updated, get the text configuration, and
  *           // call {@link #setHtml} with the 'text' field of the record.
  *           getText: {
  *              setHtml: 'text'
@@ -33,6 +33,54 @@
 Ext.define('Ext.dataview.DataItem', {
     extend: 'Ext.Container',
     xtype : 'dataitem',
+
+    /**
+     * @event tap
+     * Fires whenever the tap event is triggered on the DataItem
+     * @param {Ext.dataview.DataItem} this
+     * @param {Ext.data.Model} record The record assosciated with the DataItem
+     * @param {Ext.EventObject} e The event object
+     */
+
+    /**
+     * @event doubletap
+     * Fires whenever the doubletap event is triggered on the DataItem
+     * @param {Ext.dataview.DataItem} this
+     * @param {Ext.data.Model} record The record assosciated with the DataItem
+     * @param {Ext.EventObject} e The event object
+     */
+
+    /**
+     * @event touchstart
+     * Fires whenever the touchstart event is triggered on the DataItem
+     * @param {Ext.dataview.DataItem} this
+     * @param {Ext.data.Model} record The record assosciated with the DataItem
+     * @param {Ext.EventObject} e The event object
+     */
+
+    /**
+     * @event touchmove
+     * Fires whenever the touchmove event is triggered on the DataItem
+     * @param {Ext.dataview.DataItem} this
+     * @param {Ext.data.Model} record The record assosciated with the DataItem
+     * @param {Ext.EventObject} e The event object
+     */
+
+    /**
+     * @event touchend
+     * Fires whenever the touchend event is triggered on the DataItem
+     * @param {Ext.dataview.DataItem} this
+     * @param {Ext.data.Model} record The record assosciated with the DataItem
+     * @param {Ext.EventObject} e The event object
+     */
+
+    /**
+     * @event swipe
+     * Fires whenever the swipe event is triggered on the DataItem
+     * @param {Ext.dataview.DataItem} this
+     * @param {Ext.data.Model} record The record assosciated with the DataItem
+     * @param {Ext.EventObject} e The event object
+     */
 
     config: {
         baseCls: Ext.baseCSSPrefix + 'data-item',
@@ -120,13 +168,13 @@ Ext.define('Ext.dataview.DataItem', {
      */
 
     updateRecord: function(newRecord) {
+        var data = newRecord.getData();
         if (newRecord) {
-            Ext.apply(newRecord.data, Ext.dataview.DataView.prepareAssociatedData(newRecord));
+            Ext.apply(data, Ext.dataview.DataView.prepareAssociatedData(newRecord));
         }
         var me = this,
             items = me.getItems(),
             item = items.first(),
-            data = newRecord.data,
             dataMap = me.getDataMap(),
             componentName, component, setterMap, setterName;
         if (!item) {
@@ -145,6 +193,6 @@ Ext.define('Ext.dataview.DataItem', {
         }
         // Bypassing setter because sometimes we pass the same object (different properties)
         // TODO: Move this into the default dataMap???
-        item.updateData(newRecord.data);
+        item.updateData(data);
     }
 });
