@@ -7,7 +7,7 @@ Ext.define('Gongzhu.view.PrincessList', {
 	  store: 'CategoryTitleStores',
 	  itemTpl:"<img src='{icon}' width=35 height=35/>{title}{etitle}<br/><small>{desc}</small>",
 	  flex:1,
-
+	 
     
     }
 
