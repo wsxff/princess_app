@@ -2,7 +2,8 @@ Ext.define('Gongzhu.view.Header', {
     extend: 'Ext.Toolbar',
     xtype : 'header',
 
-		config:{ui: 'searchbar',
+		config:{
+		    ui: 'searchbar',
         layout: 'vbox',
         
         items: [

@@ -7,7 +7,7 @@ Ext.define('Gongzhu.controller.Main',{
     views : [
     'Main',
     'Header',
-    'CategoryList'
+    
     ],
     stores: [
         'BannerPicStores',
@@ -22,17 +22,30 @@ Ext.define('Gongzhu.controller.Main',{
     },
     {
         ref       : 'header',
-        selector  : 'headerview',
-        xtype     : 'headerview'
+        selector  : 'header',
+        xtype     : 'header'
     },
     {
-        ref       : 'categorylist',
-        selector  : 'categorylistview',
-        xtype     : 'categorylistview'
-    }
+        ref       : 'bodyview',
+        selector  : 'tabpanel',
+        xtype     : 'princessbody'
+    },
+    {
+        ref       : 'banner',
+        selector  : 'banner',
+        xtype     : 'banner'
+    },
+    {
+        ref       : 'princesslist',
+        selector  : 'princesslist',
+        xtype     : 'princesslist'
+    },
     ],
     init : function(){
 
         this.getMainView().create();
+        
     }
+   
+    
 })

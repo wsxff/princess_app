@@ -6,5 +6,5 @@ Ext.define('Gongzhu.store.BannerPicStores', {
            type: 'jsonp',
            url : 'http://sns.gongzhu.com/index/get_banner.json'
        },
-       autoLoad    : true,
+       autoLoad    : true
 });
