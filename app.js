@@ -9,7 +9,7 @@ Ext.application({
 			items : [{
 				xtype : 'panel',
 				docked : 'top',
-				html : ''
+				html : '111'
 			}, {
 
 				xtype : 'list',
