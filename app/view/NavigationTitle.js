@@ -2,14 +2,21 @@ Ext.define('Gongzhu.view.NavigationTitle', {
 
     extend: 'Ext.navigation.View',
     xtype : 'navlist',
-
+    requires: [
+    'Gongzhu.view.Header',
+   
+    ],
     //true means the back button text will always be 'back'
     // useTitleForBackButtonText: true,
     config:{
-        fullscreen: true,
+       
         items: [
 
         //first item, which is visibile initially
+        {
+            xtype :'header',
+            docked : 'top'
+        },
         {
             title: 'Ext.navigation.View Example',
             layout: 'vbox',
@@ -20,7 +27,10 @@ Ext.define('Gongzhu.view.NavigationTitle', {
                 text: 'Push another view!',
                 handler: function() {
                     //we already have other items in this navigation view, so we can simply use an index if we want
-                    view.push(1);
+                    
+                    alert(this.getText());
+                    view23.push(1);
+
                 }
             }
             ]
@@ -71,4 +81,4 @@ Ext.define('Gongzhu.view.NavigationTitle', {
         ]
     }
 });
-
+var view23 = Ext.create('Gongzhu.view.NavigationTitle');

@@ -3,11 +3,16 @@ Ext.define('Gongzhu.view.TabPanel', {
     xtype : 'princessbody',
     requires: [
     'Gongzhu.view.Banner',
-    'Gongzhu.view.PrincessList',
+    'Gongzhu.view.PrincessMenu',
+    'Gongzhu.view.NavigationTitle',
     ],
     config:{
-        tabBarPosition : 'bottom',
-
+         tabBar: {
+                docked: 'bottom',
+                layout: {
+                    pack: 'center'
+                }
+            },
         items : [
         {
 
@@ -15,14 +20,15 @@ Ext.define('Gongzhu.view.TabPanel', {
             iconCls : 'home',
             layout:'vbox',
             items:[{
-                xtype:'banner'
-            },{
-                xtype:'princesslist'
-            }]
+                xtype:'princessmenu'
+            }
+            ]
         }, {
             title : '收藏',
             iconCls : 'star',
             cls : 'home',
+            layout:'fit',
+            items:[{ xtype:'navlist'}]
         },
         //this is the new item
         {

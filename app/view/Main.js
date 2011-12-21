@@ -4,18 +4,19 @@ Ext.define('Gongzhu.view.Main', {
     requires: [
     'Gongzhu.view.Header',
     'Gongzhu.view.TabPanel',
+    'Gongzhu.view.NavigationTitle',
     ],
     config: {
         fullscreen: true,
-        layout: 'fit',
-
+        layout: 'card',
+animation:'Slide',
         items: [
 
         {
             xtype :'header',
             docked : 'top'
         }, {
-            xtype:'princessbody'        
+            xtype:'princessbody' 
         }
 
         ]

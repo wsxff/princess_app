@@ -7,11 +7,13 @@ Ext.define('Gongzhu.controller.Main',{
     views : [
     'Main',
     'Header',
-    
+    'PrincessCategory',
+    'PrincessMenu'
     ],
     stores: [
         'BannerPicStores',
-        'CategoryTitleStores'
+        'MenuStores',
+        'CategoryStores'
     ],
     refs: [
     {
@@ -36,16 +38,34 @@ Ext.define('Gongzhu.controller.Main',{
         xtype     : 'banner'
     },
     {
-        ref       : 'princesslist',
-        selector  : 'princesslist',
-        xtype     : 'princesslist'
+        ref       : 'princessmenu',
+        selector  : 'princessmenu',
+        xtype     : 'princessmenu'
     },
     ],
     init : function(){
-
+       
         this.getMainView().create();
+
+        this.control({
+            'titlelist': {
+                select: this.onListTap
+            },
+            'etitlelist': {
+                select: this.onListTapE
+            },
+            'header': {
+               select: this.onHeaderTap
+            },
+            'viewport > panel': {
+                            render: this.onPanelRendered
+                        }
+
+        });
         
-    }
+    },
+    
+    onHeaderTap: function(){alert("test");}
    
     
-})
+});
