@@ -7,12 +7,12 @@ Ext.define('Gongzhu.view.TabPanel', {
     'Gongzhu.view.NavigationTitle',
     ],
     config:{
-         tabBar: {
-                docked: 'bottom',
-                layout: {
-                    pack: 'center'
-                }
-            },
+        tabBar: {
+            docked: 'bottom',
+            layout: {
+                pack: 'center'
+            }
+        },
         items : [
         {
 
