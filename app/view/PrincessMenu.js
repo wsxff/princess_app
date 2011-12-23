@@ -11,7 +11,7 @@ Ext.define('Gongzhu.view.PrincessMenu', {
         store: 'MenuStores',
         itemTpl:"<img src='{icon}' width=35 height=35/>{title}{etitle}<br/><small>{desc}</small>",
         flex:2,
-        onItemDisclosure: function (record) { // TODO: Render the selected note in the note editor. 
+        onItemDisclosure: function (record) { 
             var pcat = Ext.create('Gongzhu.view.PrincessCategory');
             pcat.show();
         }

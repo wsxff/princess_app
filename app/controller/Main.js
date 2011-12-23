@@ -8,12 +8,15 @@ Ext.define('Gongzhu.controller.Main',{
     'Main',
     'Header',
     'PrincessCategory',
-    'PrincessMenu'
+    'PrincessMenu',
+    'SubCategory'
     ],
     stores: [
     'BannerPicStores',
     'MenuStores',
-    'CategoryStores'
+    'CategoryStores',
+    'SubCategoryStores',
+    
     ],
     refs: [
     {
@@ -59,8 +62,8 @@ Ext.define('Gongzhu.controller.Main',{
             'etitlelist': {
                 select: this.onListTap
             },
-            'princesscat': {
-                select: this.loadSubCat
+            'header': {
+               // select: this.loadSubCat
             },
             'viewport > panel': {
                 render: this.onPanelRendered

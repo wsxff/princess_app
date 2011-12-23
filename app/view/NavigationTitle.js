@@ -13,12 +13,9 @@ Ext.define('Gongzhu.view.NavigationTitle', {
         items: [
 
         //first item, which is visibile initially
+
         {
-            xtype :'header',
-            docked : 'top'
-        },
-        {
-            title: 'Ext.navigation.View Example',
+            title: 'View Example',
             layout: 'vbox',
             padding: 10,
             items: [

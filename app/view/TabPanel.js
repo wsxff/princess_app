@@ -19,7 +19,7 @@ Ext.define('Gongzhu.view.TabPanel', {
             title : '首页',
             iconCls : 'home',
             layout:'vbox',
-            items:[{
+            items:[{xtype:'banner'},{
                 xtype:'princessmenu'
             }
             ]
