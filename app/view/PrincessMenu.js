@@ -2,8 +2,9 @@ Ext.define('Gongzhu.view.PrincessMenu', {
     extend: 'Ext.List',
     xtype : 'princessmenu',
     requires: [
+    'Gongzhu.view.Banner',
     'Gongzhu.view.PrincessCategory',
-
+    'Gongzhu.view.PrincessBrand',
     ],
     config:{
 
@@ -17,11 +18,14 @@ Ext.define('Gongzhu.view.PrincessMenu', {
                 var pcat = Ext.create('Gongzhu.view.PrincessCategory');
                 pcat.show();
             };
-            if (strContains(record.data.etitle,'BRAND')){alert("brand view")};
+            if (strContains(record.data.etitle,'BRAND')){
+                var pbrand = Ext.create('Gongzhu.view.PrincessBrand');
+                pbrand.show();
+            };
             if (strContains(record.data.etitle,'FUNCTION')){alert("function view")};
             if (strContains(record.data.etitle,'SEARCH')){alert(" search view")};
             
-        }
+        },items:[{xtype:'banner'}]
 
     }
 
