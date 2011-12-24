@@ -9,13 +9,13 @@ Ext.define('Gongzhu.controller.Main',{
     'Header',
     'PrincessCategory',
     'PrincessMenu',
-    'SubCategory'
+   
     ],
     stores: [
     'BannerPicStores',
     'MenuStores',
     'CategoryStores',
-    'SubCategoryStores',
+    
     
     ],
     refs: [

@@ -5,5 +5,5 @@ Ext.application({
     name: 'Gongzhu',
 
     controllers: ['Main'],
-    models     : ['BannerPic','PrincessMenu','PrincessCategory','PrincessSubCategory'],
+    models     : ['BannerPic','PrincessMenu','PrincessCategory'],
 });
