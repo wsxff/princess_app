@@ -9,7 +9,7 @@ Ext.define('Gongzhu.view.PrincessMenu', {
 
         disclosure: true,
         store: 'MenuStores',
-        itemTpl:"<img src='{icon}' width=35 height=35/>{title}{etitle}<br/><small>{desc}</small>",
+        itemTpl:"<div style='float:left'><img src='{icon}' width=35 height=35/></div><div>{title}{etitle}<br/><small>{desc}</small></div>",
         flex:2,
         onItemDisclosure: function (record) { // TODO: Render the selected note in the note editor. 
            

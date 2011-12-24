@@ -3,7 +3,7 @@ Ext.define('Gongzhu.view.Header', {
     xtype : 'header',
 
     config:{
-        ui: 'searchbar',
+    
         layout: 'vbox',
 
         items: [

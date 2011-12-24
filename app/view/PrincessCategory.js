@@ -6,21 +6,25 @@ Ext.define('Gongzhu.view.PrincessCategory', {
 
         disclosure: true,
         store: 'CategoryStores',
-        itemTpl:"<img src='{icon}' width=35 height=35 />{cat_name}{product_count}<br/><small>{cat_id}</small>",
+        itemTpl:"<div style='float:left'><img src='{icon}' width=35 height=35 /></div><div >{cat_name}<br/><small>共{product_count}款商品</small></div>",
         flex:2,
         onItemDisclosure: function (record) { 
+           
             if (record.data.icon !=""){
-                var store = Ext.getStore('CategoryStores');  
+                var store = this.getStore();
                 store.getProxy().extraParams.id= record.data.cat_id; 
                 store.read();  
                 store.load();
                 //var subcat = Ext.create('Gongzhu.view.PrincessCategory');
+                this.setItemTpl("<strong>{cat_name}</strong><br/><small>共{product_count}款商品</small>");
                 this.setStore(store) ;
-                this.setItemTpl("{cat_name}{product_count}<br/><small>{product_count}</small>");
+this.deselect(record);
                 this.refresh();
+
             }
             else{
                 alert("get product list view");
+                 
             }
 
         },
