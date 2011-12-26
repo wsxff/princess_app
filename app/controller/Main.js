@@ -9,15 +9,15 @@ Ext.define('Gongzhu.controller.Main',{
     'Header',
     'PrincessCategory',
     'PrincessMenu',
-   'PrincessBrand'
+    'PrincessBrand'
     ],
     stores: [
     'BannerPicStores',
     'MenuStores',
     'CategoryStores',
     'BrandStores'
-    
-    
+
+
     ],
     refs: [
     {
@@ -32,9 +32,9 @@ Ext.define('Gongzhu.controller.Main',{
         xtype     : 'header'
     },
     {
-        ref       : 'bodyview',
+        ref       : 'bootomtabs',
         selector  : 'tabpanel',
-        xtype     : 'princessbody'
+        xtype     : 'bootomtabs'
     },
     {
         ref       : 'banner',
@@ -57,14 +57,14 @@ Ext.define('Gongzhu.controller.Main',{
         this.getMainView().create();
 
         this.control({
-            'titlelist': {
-                select: this.onListTap
+            'princesscat': {
+                itemtap: this.onCatListTap
             },
-            'etitlelist': {
-                select: this.onListTap
+            'princessmenu': {
+                itemtap: this.onMenuListTap
             },
             'header': {
-               // select: this.loadSubCat
+                // select: this.loadSubCat
             },
             'viewport > panel': {
                 render: this.onPanelRendered
@@ -74,7 +74,34 @@ Ext.define('Gongzhu.controller.Main',{
 
     },
 
-    loadSubCat: function(){alert("loading subcat");}
+    onCatListTap: function(list,index){
+        var record = list.getStore().getAt(index);
+        if (record.data.icon !=""){
 
-
+            var store = list.getStore();
+            store.getProxy().extraParams.id= record.data.cat_id; 
+            store.read();  
+            store.load();
+            //var subcat = Ext.create('Gongzhu.view.PrincessCategory');
+            list.setItemTpl("<strong>{cat_name}</strong><br/><small>共{product_count}款商品</small>");
+            list.setStore(store) ;
+            list.deselect(record);
+            list.refresh({type: 'slide',duration: 500,});
+        }else{
+            alert("get product list view");
+        }
+    },
+    onMenuListTap: function(list,index){
+        var record = list.getStore().getAt(index);
+        if (strContains(record.data.etitle,'CATALOG')){
+            var pcat = Ext.create('Gongzhu.view.PrincessCategory');
+            pcat.show({type: 'flip'});
+        };
+        if (strContains(record.data.etitle,'BRAND')){
+            var pbrand = Ext.create('Gongzhu.view.PrincessBrand');
+            pbrand.show({type: 'slide',duration: 5000,});
+        };
+        if (strContains(record.data.etitle,'FUNCTION')){alert("function view")};
+        if (strContains(record.data.etitle,'SEARCH')){alert(" search view")};
+    }
 });

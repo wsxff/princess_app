@@ -10,18 +10,15 @@ Ext.define('Gongzhu.view.Main', {
     config: {
         fullscreen: true,
         layout: 'card',
-animation:'Slide',
+        animation:'slide',
         items: [
-
         {
-            xtype :'header',
-            docked : 'top'
-        }, {
             xtype:'princessmenu' 
         }
         , {
             xtype:'princesscat' 
         }
+        
        
         ]
     }
