@@ -9,14 +9,15 @@ Ext.define('Gongzhu.controller.Main',{
     'Header',
     'PrincessCategory',
     'PrincessMenu',
-    'PrincessBrand'
+    'PrincessBrand',
+    'ProductList'
     ],
     stores: [
     'BannerPicStores',
     'MenuStores',
     'CategoryStores',
-    'BrandStores'
-
+    'BrandStores',
+    'ProductStores'
 
     ],
     refs: [
@@ -51,6 +52,11 @@ Ext.define('Gongzhu.controller.Main',{
         selector  : 'princesscategory',
         xtype     : 'princesscat'
     },
+    {
+        ref       : 'productlist',
+        selector  : 'productlist',
+        xtype     : 'productlist'
+    },
     ],
     init : function(){
 
@@ -62,6 +68,9 @@ Ext.define('Gongzhu.controller.Main',{
             },
             'princessmenu': {
                 itemtap: this.onMenuListTap
+            },
+            'princesbrand': {
+                itemtap: this.onBrandListTap
             },
             'header': {
                 // select: this.loadSubCat
@@ -88,7 +97,9 @@ Ext.define('Gongzhu.controller.Main',{
             list.deselect(record);
             list.refresh({type: 'slide',duration: 500,});
         }else{
-            alert("get product list view");
+
+            var plist = Ext.create('Gongzhu.view.ProductList');
+            plist.show({type: 'flip'});
         }
     },
     onMenuListTap: function(list,index){
@@ -103,5 +114,11 @@ Ext.define('Gongzhu.controller.Main',{
         };
         if (strContains(record.data.etitle,'FUNCTION')){alert("function view")};
         if (strContains(record.data.etitle,'SEARCH')){alert(" search view")};
+    },
+    onBrandListTap: function(list,index){
+        var plist = Ext.create('Gongzhu.view.ProductList');
+        plist.show({type: 'flip'});
+        plist.refresh();
+
     }
 });

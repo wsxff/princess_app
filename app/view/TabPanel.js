@@ -21,13 +21,12 @@ Ext.define('Gongzhu.view.TabPanel', {
             title : '首页',
             iconCls : 'home',
             cls : 'home',
-            layout:'vbox',
-
+       
         }, {
             title : '收藏',
             iconCls : 'star',
             cls : 'home',
-            layout:'fit',
+        
            
         },
         //this is the new item
@@ -35,8 +34,7 @@ Ext.define('Gongzhu.view.TabPanel', {
             title : '点评',
             iconCls : 'user',
             xtype : 'formpanel',
-            url : 'contact.php',
-            layout : 'vbox',
+        
         }
         ]
     },

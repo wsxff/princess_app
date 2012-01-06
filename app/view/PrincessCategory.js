@@ -3,7 +3,7 @@ Ext.define('Gongzhu.view.PrincessCategory', {
     xtype : 'princesscat',
 
     config:{
-        
+
         disclosure: true,
         store: 'CategoryStores',
         itemTpl:"<div style='float:left'><img src='{icon}' width=35 height=35 /></div><div >{cat_name}<br/><small>共{product_count}款商品</small></div>",
@@ -12,11 +12,7 @@ Ext.define('Gongzhu.view.PrincessCategory', {
             //main controller 直接判断
         },
         items:[
-        {xtype:'header',docked:'top'},
-        {
-            xtype:'bootomtabs',
-            docked:'bottom'
-        }],
+        {xtype:'header',docked:'top'}],
     }
 
 });

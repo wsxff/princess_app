@@ -4,12 +4,12 @@ Ext.define('Gongzhu.view.NavigationTitle', {
     xtype : 'navlist',
     requires: [
     'Gongzhu.view.Header',
-   
+
     ],
     //true means the back button text will always be 'back'
     // useTitleForBackButtonText: true,
     config:{
-       
+
         items: [
 
         //first item, which is visibile initially
@@ -24,7 +24,7 @@ Ext.define('Gongzhu.view.NavigationTitle', {
                 text: 'Push another view!',
                 handler: function() {
                     //we already have other items in this navigation view, so we can simply use an index if we want
-                    
+
                     alert(this.getText());
                     view23.push(1);
 

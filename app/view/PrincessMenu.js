@@ -1,3 +1,4 @@
+
 Ext.define('Gongzhu.view.PrincessMenu', {
     extend: 'Ext.List',
     xtype : 'princessmenu',
@@ -7,17 +8,31 @@ Ext.define('Gongzhu.view.PrincessMenu', {
     'Gongzhu.view.PrincessBrand',
     ],
     config:{
-        layout: 'card',
+
         disclosure: true,
         store: 'MenuStores',
         itemTpl:"<div style='float:left'><img src='{icon}' width=35 height=35/></div><div>{title}{etitle}<br/><small>{desc}</small></div>",
         flex:2,
-        onItemDisclosure: function (record) { 
-            // main controller 
+        onItemDisclosure: function (record) { // TODO: Render the selected note in the note editor. 
 
+            if (strContains(record.data.etitle,'CATALOG')){
+                var pcat = Ext.create('Gongzhu.view.PrincessCategory');
+                pcat.show();
+            };
+            if (strContains(record.data.etitle,'BRAND')){
+                var pbrand = Ext.create('Gongzhu.view.PrincessBrand');
+                pbrand.show();
+            };
+            if (strContains(record.data.etitle,'FUNCTION')){alert("function view")};
+            if (strContains(record.data.etitle,'SEARCH')){alert(" search view")};
 
-            },items:[{xtype:'banner'}]
-
+        },     
+        items:[
+        {xtype:'header',docked:'top'},
+        {
+            xtype:'bootomtabs',
+            docked:'bottom'
+            }],
         }
 
     });

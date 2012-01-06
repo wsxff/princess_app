@@ -15,10 +15,6 @@ Ext.define('Gongzhu.view.Main', {
         {
             xtype:'princessmenu' 
         }
-        , {
-            xtype:'princesscat' 
-        }
-        
        
         ]
     }
