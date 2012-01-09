@@ -1,6 +1,6 @@
 Ext.define('Gongzhu.view.PrincessBrand', {
     extend: 'Ext.List',
-    xtype : 'princesbrand',
+    xtype : 'princessbrand',
 
     config:{
 
@@ -13,7 +13,6 @@ Ext.define('Gongzhu.view.PrincessBrand', {
         onItemDisclosure: function (record) { 
 
         },
-        items:[{xtype:'header',dock:'top'}],
     }
 
 });

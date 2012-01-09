@@ -5,14 +5,10 @@ Ext.define('Gongzhu.store.ProductStores', {
     proxy: {
         type: 'jsonp',
         url : 'http://sns.gongzhu.com/product/get_product.json',
-        reader:{root: 'list'}
+        extraParams: {  
+                  product_id: ''
+              }
     },
     autoLoad    : true,
-    getGroupString: function (record) {
-            if (record && record.data.letter) {
-               return record.get('letter');
-            } else { 
-                return '';   
-            }
-    }
+
 });

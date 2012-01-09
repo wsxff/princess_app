@@ -5,8 +5,8 @@ Ext.define('Gongzhu.view.Banner', {
 		config:{
 		  store: 'BannerPicStores',
 		  itemTpl:"<div><img src='{pic}' alt='mainpic'/></div>",
-		  flex:1,
-		  height:300  
+		  height:300,
+		  html:"banner"  
         }
 
 });

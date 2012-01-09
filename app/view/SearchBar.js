@@ -1,11 +1,22 @@
+
 Ext.define('Gongzhu.view.SearchBar', {
     extend: 'Ext.Toolbar',
     xtype : 'searchbar',
+    requires: ['Ext.field.Text'],
 
-    config:{  
+    config: {
+        ui: 'searchbar',
         layout: 'vbox',
-        html:"search bar by cat,brand,others"
+
+        items: [
+            {
+                xtype: 'title',
+                title: 'Search'
+            },
+            {
+                xtype: 'searchfield',
+                placeHolder: 'Search...'
+            }
+        ]
     }
-
-
 });

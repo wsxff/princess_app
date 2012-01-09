@@ -10,14 +10,16 @@ Ext.define('Gongzhu.controller.Main',{
     'PrincessCategory',
     'PrincessMenu',
     'PrincessBrand',
-    'ProductList'
+    'ProductList',
+    'Product'
     ],
     stores: [
     'BannerPicStores',
     'MenuStores',
     'CategoryStores',
     'BrandStores',
-    'ProductStores'
+    'ProductStores',
+    'ProductListStores',
 
     ],
     refs: [
@@ -60,8 +62,8 @@ Ext.define('Gongzhu.controller.Main',{
     ],
     init : function(){
 
-        this.getMainView().create();
-
+        var masterview = this.getMainView().create();
+        //masterview.setActiveItem(1);
         this.control({
             'princesscat': {
                 itemtap: this.onCatListTap
@@ -73,16 +75,22 @@ Ext.define('Gongzhu.controller.Main',{
                 itemtap: this.onBrandListTap
             },
             'header': {
-                // select: this.loadSubCat
+               
             },
-            'viewport > panel': {
-                render: this.onPanelRendered
+            'productlist':{
+                itemtap: this.onProductListTap
+            },
+            'banner':{
+                tap: this.onBannerTap
             }
-
         });
 
     },
-
+    
+    onBannerTap: function(){
+        alert("ok");
+    },
+    
     onCatListTap: function(list,index){
         var record = list.getStore().getAt(index);
         if (record.data.icon !=""){
@@ -99,7 +107,14 @@ Ext.define('Gongzhu.controller.Main',{
         }else{
 
             var plist = Ext.create('Gongzhu.view.ProductList');
+            var store = plist.getStore();
+            store.getProxy().extraParams.cid = record.data.cat_id
+            store.read();
+            store.load();
+            plist.setStore(store);
             plist.show({type: 'flip'});
+            plist.refresh();
+            
         }
     },
     onMenuListTap: function(list,index){
@@ -115,10 +130,28 @@ Ext.define('Gongzhu.controller.Main',{
         if (strContains(record.data.etitle,'FUNCTION')){alert("function view")};
         if (strContains(record.data.etitle,'SEARCH')){alert(" search view")};
     },
+    
     onBrandListTap: function(list,index){
+        var record = list.getStore().getAt(index);
         var plist = Ext.create('Gongzhu.view.ProductList');
+        var store = plist.getStore();
+        store.getProxy().extraParams.bid = record.data.brand_id
+        store.read();
+        store.load();
+        plist.setStore(store);
         plist.show({type: 'flip'});
         plist.refresh();
-
+    },
+    
+    onProductListTap: function(list,index){
+        var record = list.getStore().getAt(index);
+        var product = Ext.create('Gongzhu.view.Product');
+        var store = product.getStore();
+        store.getProxy().extraParams.product_id = record.data.product_id
+        store.read();
+        store.load();
+        product.setStore(store);
+        product.show({type: 'flip'});
+        product.refresh();
     }
 });
