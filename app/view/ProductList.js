@@ -9,9 +9,7 @@ Ext.define('Gongzhu.view.ProductList', {
     config:{
 
         store: 'ProductListStores',
-        itemTpl:"<div style='float:left'><img src='{icon}'/></div><div >{product_name}<br/><small>{price}</small>,stars:{stars},{attribute}点评{useds}</div>",
-        flex:2,
-
+        itemTpl:"<div style='float:left'><img src='{image_url}'/></div><div >{product_name}<br/>stars:{stars},<small>{price}</small>,分类{cat_id},({useds}条点评)</div>",
         items:[
         {xtype:'searchbar',docked:'top'}],
     }

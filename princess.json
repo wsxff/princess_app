@@ -1,0 +1,19 @@
+{
+	"applicationName":"princess_app",
+	"applicationId":"com.mycompany.myAppID",
+	"outputPath":"~/Documents/__APPLICATION_NAME__/",
+	"iconName":"icon.png",
+	"versionString":"1.0",
+	"webAppPath":"/Users/dreamlinx/Sites/princess_app",
+	"configuration":"Debug",
+	"platform":"Simulator",
+	"deviceType":"Universal",
+	"certificatePath":"~/Desktop/key.keystore",
+	"certificateAlias":"aliasName",
+	"sdkPath":"/android-sdk-mac_86",
+	"orientations": ["portrait",
+		"landscapeLeft",
+		"landscapeRight",
+		"portraitUpsideDown"
+	]
+}

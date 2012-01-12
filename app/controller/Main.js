@@ -59,6 +59,11 @@ Ext.define('Gongzhu.controller.Main',{
         selector  : 'productlist',
         xtype     : 'productlist'
     },
+    {
+        ref       : 'product',
+        selector  : 'product',
+        xtype     : 'product'
+    },
     ],
     init : function(){
 
@@ -144,10 +149,11 @@ Ext.define('Gongzhu.controller.Main',{
     },
     
     onProductListTap: function(list,index){
+       
         var record = list.getStore().getAt(index);
         var product = Ext.create('Gongzhu.view.Product');
         var store = product.getStore();
-        store.getProxy().extraParams.product_id = record.data.product_id
+        store.getProxy().extraParams.id = record.data.product_id
         store.read();
         store.load();
         product.setStore(store);

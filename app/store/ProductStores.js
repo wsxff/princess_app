@@ -6,7 +6,7 @@ Ext.define('Gongzhu.store.ProductStores', {
         type: 'jsonp',
         url : 'http://sns.gongzhu.com/product/get_product.json',
         extraParams: {  
-                  product_id: ''
+                  id: ''
               }
     },
     autoLoad    : true,

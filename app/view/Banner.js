@@ -6,7 +6,7 @@ Ext.define('Gongzhu.view.Banner', {
 		  store: 'BannerPicStores',
 		  itemTpl:"<div><img src='{pic}' alt='mainpic'/></div>",
 		  height:300,
-		  html:"banner"  
+		  
         }
 
 });
