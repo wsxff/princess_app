@@ -104,8 +104,7 @@ Ext.define('Gongzhu.controller.Main',{
             store.getProxy().extraParams.id= record.data.cat_id; 
             store.read();  
             store.load();
-            //var subcat = Ext.create('Gongzhu.view.PrincessCategory');
-            list.setItemTpl("<strong>{cat_name}</strong><br/><small>共{product_count}款商品</small>");
+            list.setItemTpl("<div class='item_content'><span class='item_title'>{cat_name}</span><p class='small_title'>共{product_count}款商品</p></div>");
             list.setStore(store) ;
             list.deselect(record);
             list.refresh({type: 'slide',duration: 500,});

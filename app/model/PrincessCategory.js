@@ -3,3 +3,5 @@ Ext.define('Gongzhu.model.PrincessCategory', {
     fields: ['cat_id','cat_name','product_count','icon'],
       proxy: 'princess'
 });
+
+/* todo:分类-缺少英文名字输出，现在只有中文*/

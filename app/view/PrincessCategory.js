@@ -6,7 +6,7 @@ Ext.define('Gongzhu.view.PrincessCategory', {
 
         disclosure: true,
         store: 'CategoryStores',
-        itemTpl:"<div style='float:left'><img src='{icon}' width=35 height=35 /></div><div >{cat_name}<br/><small>共{product_count}款商品</small></div>",
+        itemTpl:"<div class='item_icon'><img src='{icon}' class='category_icon'/></div><div class='item_content'><span class='item_title'>{cat_name}</span><p class='small_title'>共{product_count}款商品</p></div>",
         flex:2,
         onItemDisclosure: function (record) { 
             //main controller 直接判断
