@@ -68,6 +68,7 @@ Ext.define('Gongzhu.controller.Main',{
     init : function(){
 
         var masterview = this.getMainView().create();
+        
         //masterview.setActiveItem(1);
         this.control({
             'princesscat': {
@@ -85,16 +86,18 @@ Ext.define('Gongzhu.controller.Main',{
             'productlist':{
                 itemtap: this.onProductListTap
             },
-            'banner':{
-                tap: this.onBannerTap
-            }
+            'selectfield': {
+                change: function(field) {
+                    var config = {};
+                    config[field.getName()] = field.getValue();
+                    this.doFilter(config);
+                    //alert('test');
+                }
+            },
         });
 
     },
-    
-    onBannerTap: function(){
-        alert("ok");
-    },
+
     
     onCatListTap: function(list,index){
         var record = list.getStore().getAt(index);
@@ -158,5 +161,30 @@ Ext.define('Gongzhu.controller.Main',{
         product.setStore(store);
         product.show({type: 'flip'});
         product.refresh();
+    },
+    /**
+     * @private
+     * Listener for the 'filter' event fired by the listView set up in the 'list' action. This simply
+     * gets the form values that the user wants to filter on and tells the Store to filter using them.
+     */
+    doFilter: function(values, form) {
+        var store   = this.getProductListStoresStore(),
+            filters = [],
+            field;
+        
+        Ext.iterate(values, function(field, value) {
+            filters.push(new Ext.util.Filter({
+                property: field,
+                value   : value
+            }));
+            //alert(field);
+            //alert(value);
+            store.getProxy().extraParams.bid = value;
+        });
+        store.read();
+        store.load();
+        this.refresh();
+        //store.clearFilter();
+        //store.filter(filters);
     }
 });
