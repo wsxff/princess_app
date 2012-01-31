@@ -3,7 +3,7 @@ Ext.Loader.setPath('Ext.data.proxy.Princess', 'lib/PrincessProxy.js');
 Ext.ClassManager.setAlias('Ext.data.proxy.Princess', 'proxy.princess');
 Ext.application({
     name: 'Gongzhu',
-
-    controllers: ['Main'],
+autoCreateViewport : true,
+    controllers: ['Viewport','PrincessMenu','PrincessBrand','PrincessCategory','ProductList','Product'],
     models     : ['BannerPic','PrincessMenu','PrincessCategory','Brand','Product'],
 });

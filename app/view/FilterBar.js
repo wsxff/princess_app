@@ -21,9 +21,11 @@ Ext.define('Gongzhu.view.FilterBar', {
         {
             xtype: 'selectfield',
             label:'口碑',
-            name:'filter_star',
+            name:'stars',
+            id:"filter_stars",
             prependText: '全部',
             options: [
+            {text: '全部',  value: '0'},
             {text: '5星评论',  value: '5'},
             {text: '4星评论',  value: '4'},
             {text: '3星评论',  value: '3'},
@@ -36,8 +38,10 @@ Ext.define('Gongzhu.view.FilterBar', {
             xtype: 'selectfield',
             label:'价格',
             prependText: '全部',
-            name:'filter_price',
+            id:'filter_price',
+            name:'price',
             options: [
+            {text: '全部',  value: '0'},
             {text: '0-99元',  value: '99'},
             {text: '100元-199元', value: '199'},
             {text: '200-399元',  value: '399'},
@@ -48,12 +52,12 @@ Ext.define('Gongzhu.view.FilterBar', {
         {
             xtype: 'selectfield',
             label:'品牌',
+            id:'filter_brand',
             prependText: '全部',
-            name:'filter_brand',
+            name:'brand_id',
             store: 'BrandStores',
             displayField: 'chname',
-            valueField: 'brand_id',
-
+            valueField: 'brand_id'
         }
         ]
     }

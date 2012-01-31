@@ -32,5 +32,5 @@ Ext.define('Gongzhu.model.Product', {
     'useds',
     'wantuses'
     ],
-   
+
 });

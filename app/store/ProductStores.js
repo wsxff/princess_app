@@ -9,6 +9,5 @@ Ext.define('Gongzhu.store.ProductStores', {
                   id: ''
               }
     },
-    autoLoad    : true,
-
+   
 });

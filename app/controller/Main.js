@@ -92,7 +92,10 @@ Ext.define('Gongzhu.controller.Main',{
                     config[field.getName()] = field.getValue();
                     this.doFilter(config);
                     //alert('test');
-                }
+                },
+            'subheader':{
+                itemtap:this.onReturnBtnTap
+            }    
             },
         });
 
@@ -147,11 +150,11 @@ Ext.define('Gongzhu.controller.Main',{
         store.load();
         plist.setStore(store);
         plist.show({type: 'flip'});
+        
         plist.refresh();
     },
     
-    onProductListTap: function(list,index){
-       
+    onProductListTap: function(list,index){       
         var record = list.getStore().getAt(index);
         var product = Ext.create('Gongzhu.view.Product');
         var store = product.getStore();
@@ -162,28 +165,33 @@ Ext.define('Gongzhu.controller.Main',{
         product.show({type: 'flip'});
         product.refresh();
     },
+    /* return */
+    onReturnBtnTap:function(){
+        alert('test');
+    },
     /**
      * @private
      * Listener for the 'filter' event fired by the listView set up in the 'list' action. This simply
      * gets the form values that the user wants to filter on and tells the Store to filter using them.
      */
+
+     //todo: star/price 组合过滤需要等待搞定
     doFilter: function(values, form) {
         var store   = this.getProductListStoresStore(),
             filters = [],
             field;
-        
-        Ext.iterate(values, function(field, value) {
-            filters.push(new Ext.util.Filter({
-                property: field,
-                value   : value
-            }));
-            //alert(field);
-            //alert(value);
-            store.getProxy().extraParams.bid = value;
-        });
+
+            var brand =Ext.getCmp('filter_brand');
+            var stars =Ext.getCmp('filter_stars');
+            var price =Ext.getCmp('filter_price');
+
+            store.getProxy().extraParams.bid = brand.getValue();
+            store.getProxy().extraParams.stars = stars.getValue();
+            store.getProxy().extraParams.price = price.getValue();
+
         store.read();
         store.load();
-        this.refresh();
+        //this.refresh();
         //store.clearFilter();
         //store.filter(filters);
     }
