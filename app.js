@@ -6,4 +6,7 @@ Ext.application({
 autoCreateViewport : true,
     controllers: ['Viewport','PrincessMenu','PrincessBrand','PrincessCategory','ProductList','Product'],
     models     : ['BannerPic','PrincessMenu','PrincessCategory','Brand','Product'],
+    launch : function() {
+        
+    }
 });

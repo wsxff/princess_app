@@ -23,7 +23,7 @@ Ext.define('Gongzhu.controller.Viewport', {
             Ext.Viewport.getLayout().setAnimation(anim);
         } else {
             //Ext.Viewport.getLayout().setAnimation({
-                //type : 'fade'
+            //    type : 'fade'
             //});
         }
         var oldItem = Ext.Viewport.getActiveItem();
