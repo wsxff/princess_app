@@ -5,7 +5,7 @@
  * @alternateClassName Ext.util.Observable
  * @extend Ext.mixin.Mixin
  * @mixins Ext.mixin.Identifiable
- * 
+ *
  * Mixin that provides a common interface for publishing events.
  */
 var Observable = Ext.define('Ext.mixin.Observable', {
@@ -18,6 +18,9 @@ var Observable = Ext.define('Ext.mixin.Observable', {
 
     mixinConfig: {
         id: 'observable',
+        beforeHooks: {
+            constructor: 'constructor'
+        },
         hooks: {
             destroy: 'destroy'
         }
@@ -52,12 +55,12 @@ var Observable = Ext.define('Ext.mixin.Observable', {
 
     REMOVE_LISTENER_ACTION: 'doRemoveListener',
 
-    listenerOptionsRegex: /^(?:delay|buffer|single|args|delegate)$/,
+    listenerOptionsRegex: /^(?:delegate|single|delay|buffer|args|prepend)$/,
 
     config: {
         /**
          * @cfg {Object} listeners
-         * 
+         *
          * A config object containing one or more event handlers to be added to this object during initialization. This
          * should be a valid listeners config object as specified in the {@link #addListener} example for attaching multiple
          * handlers at once.
@@ -71,13 +74,15 @@ var Observable = Ext.define('Ext.mixin.Observable', {
     },
 
     constructor: function(config) {
-        if (config) {
+        if (Ext.isObject(config)) {
             if ('listeners' in config) {
                 this.setListeners(config.listeners);
+                delete config.listeners;
             }
 
             if ('bubbleEvents' in config) {
                 this.setBubbleEvents(config.bubbleEvents);
+                delete config.bubbleEvents;
             }
         }
 
@@ -182,6 +187,15 @@ var Observable = Ext.define('Ext.mixin.Observable', {
         return this.doFireEvent(eventName, args);
     },
 
+    /**
+     * Fires the specified event with the passed parameters and execute a function (action)
+     * at the end if there are no listeners that return false.
+     *
+     * @param {String} eventName The name of the event to fire.
+     * @param {Array} args Arguments to pass to handers
+     * @param {Function} fn Action
+     * @param {Object} scope scope of fn
+     */
     fireAction: function(eventName, args, fn, scope, options, order) {
         var actions = [];
 
@@ -201,7 +215,7 @@ var Observable = Ext.define('Ext.mixin.Observable', {
         return this.doFireEvent(eventName, args, actions);
     },
 
-    doFireEvent: function(eventName, args, actions) {
+    doFireEvent: function(eventName, args, actions, connectedController) {
         if (this.eventFiringSuspended) {
             return;
         }
@@ -209,7 +223,7 @@ var Observable = Ext.define('Ext.mixin.Observable', {
         var id = this.getObservableId(),
             dispatcher = this.getEventDispatcher();
 
-        return dispatcher.dispatchEvent(this.observableType, id, eventName, args, actions);
+        return dispatcher.dispatchEvent(this.observableType, id, eventName, args, actions, connectedController);
     },
 
     /**
@@ -387,7 +401,7 @@ var Observable = Ext.define('Ext.mixin.Observable', {
             listeners,
             listenerOptionsRegex,
             actualOptions,
-            name, value, i, ln;
+            name, value, i, ln, listener;
 
         if (typeof fn != 'undefined') {
             // Support for array format to add multiple listeners
@@ -402,6 +416,15 @@ var Observable = Ext.define('Ext.mixin.Observable', {
             }
 
             this[action](eventName, fn, scope, options, order);
+        }
+        else if (Ext.isArray(eventName)) {
+            listeners = eventName;
+
+            for (i = 0,ln = listeners.length; i < ln; i++) {
+                listener = listeners[i];
+
+                this[action](listener.event, listener.fn, listener.scope, listener, listener.order);
+            }
         }
         else {
             listenerOptionsRegex = this.listenerOptionsRegex;
@@ -418,6 +441,10 @@ var Observable = Ext.define('Ext.mixin.Observable', {
                         scope = value;
                         continue;
                     }
+                    else if (name === 'order') {
+                        order = value;
+                        continue;
+                    }
 
                     if (!listenerOptionsRegex.test(name)) {
                         eventNames.push(name);
@@ -430,8 +457,7 @@ var Observable = Ext.define('Ext.mixin.Observable', {
             }
 
             for (i = 0,ln = eventNames.length; i < ln; i++) {
-                name = eventNames[i];
-                this[action](name, listeners[i], scope, actualOptions, order);
+                this[action](eventNames[i], listeners[i], scope, actualOptions, order);
             }
         }
 
@@ -472,7 +498,7 @@ var Observable = Ext.define('Ext.mixin.Observable', {
      * - **delegate** : String
      *
      *   Uses {@link Ext.ComponentQuery} to delegate events to a specified query selector within this item.
-     *       
+     *
      *       // Create a container with a two children; a button and a toolbar
      *       var container = Ext.create('Ext.Container', {
      *           items: [
@@ -487,11 +513,11 @@ var Observable = Ext.define('Ext.mixin.Observable', {
      *               }
      *           ]
      *       });
-     *     
+     *
      *       container.on({
      *           // Ext.Buttons have an xtype of 'button', so we use that are a selector for our delegate
      *           delegate: 'button',
-     *           
+     *
      *           tap: function() {
      *               alert('Button tapped!');
      *           }
@@ -621,6 +647,7 @@ var Observable = Ext.define('Ext.mixin.Observable', {
         if (typeof events == 'string') {
             events = [events];
         }
+
         if (Ext.isArray(events)) {
             for (i = 0,ln = events.length; i < ln; i++) {
                 oldName = events[i];

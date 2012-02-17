@@ -1,1 +1,10 @@
+<<<<<<< HEAD
 .DB_Store
+=======
+# Can ignore specific files
+.DS_Store
+# Use wildcards as well
+*~
+*.swp
+
+>>>>>>> 7b78d439536bd24e17c08549b227b289568425eb

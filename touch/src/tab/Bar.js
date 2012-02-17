@@ -1,9 +1,9 @@
 /**
  * Ext.tab.Bar is used internally by {@link Ext.tab.Panel} to create the bar of tabs that appears at the top of the tab
  * panel. It's unusual to use it directly, instead see the {@link Ext.tab.Panel tab panel docs} for usage instructions.
- * 
+ *
  * Used in the {@link Ext.tab.Panel} component to display {@link Ext.tab.Tab} components.
- * 
+ *
  * @private
  */
 Ext.define('Ext.tab.Bar', {
@@ -36,15 +36,15 @@ Ext.define('Ext.tab.Bar', {
     },
 
     /**
-     * @event change
+     * @event tabchange
      * @param {Ext.tab.Bar} this
-     * @param {Ext.tab.Tab} tab The Tab button
-     * @param {Ext.Component} card The component that has been activated
+     * @param {Ext.tab.Tab} newTab The new Tab
+     * @param {Ext.tab.Tab} oldTab The old Tab
      */
 
-    // @private
-    constructor: function() {
+    initialize: function() {
         var me = this;
+        me.callParent();
 
         me.on({
             tap: 'onTabTap',
@@ -52,8 +52,6 @@ Ext.define('Ext.tab.Bar', {
             delegate: '> tab',
             scope   : me
         });
-
-        me.callParent(arguments);
     },
 
     // @private
@@ -78,7 +76,7 @@ Ext.define('Ext.tab.Bar', {
         }
         return activeTabInstance;
     },
-    
+
     /**
      * @private
      * When docked to the top, pack left, when on the bottom pack center
@@ -86,12 +84,12 @@ Ext.define('Ext.tab.Bar', {
     doSetDocked: function(newDocked) {
         var layout = this.getLayout(),
             pack   = newDocked == 'bottom' ? 'center' : 'left';
-        
+
         //layout isn't guaranteed to be instantiated so must test
         if (layout.isLayout) {
             layout.setPack(pack);
         } else {
-            layout.pack = pack;
+            layout.pack = (layout && layout.pack) ? layout.pack : pack;
         }
     },
 

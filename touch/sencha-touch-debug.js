@@ -2854,7 +2854,7 @@ var ExtObject = Ext.Object = {
      * @return {String[]} An array of keys from the object
      * @method
      */
-    getKeys: ('keys' in Object.prototype) ? Object.keys : function(object) {
+    getKeys: ('keys' in Object) ? Object.keys : function(object) {
         var keys = [],
             property;
 
@@ -2925,9 +2925,37 @@ var ExtObject = Ext.Object = {
         objectClass.prototype = prototype;
 
         return objectClass;
-    }
-};
+    },
 
+    redefineProperty: function() {
+        if ('defineProperty' in Object) {
+            return function(object, property, getter, setter) {
+                var obj = {
+                    configurable: true,
+                    enumerable: true
+                };
+
+                if (getter) {
+                    obj.get = getter;
+                }
+                if (setter) {
+                    obj.set = setter;
+                }
+                Object.defineProperty(object, property, obj);
+            };
+        }
+        else {
+            return function(object, property, getter, setter) {
+                if (getter) {
+                    object.__defineGetter__(property, getter);
+                }
+                if (setter) {
+                    object.__defineSetter__(property, setter);
+                }
+            };
+        }
+    }()
+};
 
 /**
  * A convenient alias method for {@link Ext.Object#merge}
@@ -3986,8 +4014,6 @@ var noArgs = [],
          *     Ext.define('My.Cat', {
          *         constructor: function() {
          *             alert("I'm a cat!");
-         *
-         *             return this;
          *         }
          *     });
          *
@@ -4262,8 +4288,6 @@ var noArgs = [],
          *             alert(this.self.speciesName);   // dependent on 'this'
          *
          *             statics.totalCreated++;
-         *
-         *             return this;
          *         },
          *
          *         clone: function() {
@@ -4416,8 +4440,6 @@ var noArgs = [],
          *
          *         constructor: function() {
          *             alert(this.self.speciesName); / dependentOL on 'this'
-         *
-         *             return this;
          *         },
          *
          *         clone: function() {
@@ -4460,8 +4482,6 @@ var noArgs = [],
          *
          *         constructor: function(config) {
          *             this.initConfig(config);
-         *
-         *             return this;
          *         }
          *     });
          *
@@ -4481,7 +4501,7 @@ var noArgs = [],
                 defaultConfig = new this.configClass,
                 defaultConfigList = this.initConfigList,
                 hasConfig = this.hasConfigMap,
-                nameMap, i, ln, name, initializedName, value;
+                nameMap, i, ln, name, initializedName;
 
             this.initConfig = Ext.emptyFn;
 
@@ -4496,7 +4516,10 @@ var noArgs = [],
                     if (hasConfig[name]) {
                         if (instanceConfig[name] !== null) {
                             defaultConfigList.push(name);
-                            this[configNameCache[name].initialized] = false;
+                            nameMap = configNameCache[name];
+
+                            this[nameMap.initialized] = false;
+                            this[nameMap.get] = this[nameMap.initGet];
                         }
                     }
                 }
@@ -4622,8 +4645,6 @@ var noArgs = [],
      *     Ext.define('My.Cat', {
      *         constructor: function() {
      *             alert("I'm a cat!");
-     *
-     *             return this;
      *         }
      *     });
      *
@@ -5147,10 +5168,12 @@ var noArgs = [],
                 map = cache[name] = {
                     internal: '_' + name,
                     initialized: '_is' + capitalizedName + 'Initialized',
+                    initializing: 'is' + capitalizedName + 'Initializing',
                     apply: 'apply' + capitalizedName,
                     update: 'update' + capitalizedName,
-                    'set': 'set' + capitalizedName,
-                    'get': 'get' + capitalizedName,
+                    set: 'set' + capitalizedName,
+                    get: 'get' + capitalizedName,
+                    initGet: 'initGet' + capitalizedName,
                     doSet : 'doSet' + capitalizedName,
                     changeEvent: name.toLowerCase() + 'change'
                 }
@@ -5283,6 +5306,8 @@ var noArgs = [],
                 updateName = nameMap.update,
                 setName = nameMap.set,
                 getName = nameMap.get,
+                initGetName = nameMap.initGet,
+                initializingName = nameMap.initializing,
                 hasOwnSetter = (setName in prototype) || data.hasOwnProperty(setName),
                 hasOwnApplier = (applyName in prototype) || data.hasOwnProperty(applyName),
                 hasOwnUpdater = (updateName in prototype) || data.hasOwnProperty(updateName),
@@ -5336,12 +5361,14 @@ var noArgs = [],
                     };
                 }
 
-                data[getName] = function() {
+                data[getName] = prototype[initGetName] = function() {
                     var currentGetter;
 
                     if (!this[initializedName]) {
                         this[initializedName] = true;
+                        this[initializingName] = true;
                         this[setName](this.config[name]);
+                        this[initializingName] = false;
                     }
 
                     currentGetter = this[getName];
@@ -7408,9 +7435,7 @@ This process will be automated with Sencha Command, to be released and documente
             }
         },
 
-        /**
-         * @ignore
-         */
+        // documented above
         syncRequire: function() {
             var syncModeEnabled = this.syncModeEnabled;
 
@@ -7427,9 +7452,7 @@ This process will be automated with Sencha Command, to be released and documente
             this.refreshQueue();
         },
 
-        /**
-         * @ignore
-         */
+        // documented above
         require: function(expressions, fn, scope, excludes) {
             var excluded = {},
                 included = {},
@@ -7927,15 +7950,29 @@ Ext.EventManager.un = Ext.EventManager.removeListener;
  * functions (like {@link #apply}, {@link #min} and others), but most of the framework that you use day to day exists
  * in specialized classes (for example {@link Ext.Panel}, {@link Ext.Carousel} and others).
  *
- * If you are new to Sencha Touch we recommend starting with the getting started guides to get a feel for how the
- * framework operates. After that, use the more focused guides on subjects like panels, forms and data to broaden
- * your understanding. The MVC guides take you through the process of building full applications using the framework,
- * and detail how to deploy them to production.
+ * If you are new to Sencha Touch we recommend starting with the [Getting Started Guide][getting_started] to
+ * get a feel for how the framework operates. After that, use the more focused guides on subjects like panels, forms and data
+ * to broaden your understanding. The MVC guides take you through the process of building full applications using the
+ * framework, and detail how to deploy them to production.
  *
  * The functions listed below are mostly utility functions used internally by many of the classes shipped in the
  * framework, but also often useful in your own apps.
+ *
+ * A method that is crucial to beginning your application is {@link #setup Ext.setup}. Please refer to it's documentation, or the
+ * [Getting Started Guide][getting_started] as a reference on beginning your application.
+ *
+ *     Ext.setup({
+ *         onReady: function() {
+ *             Ext.Viewport.add({
+ *                 xtype: 'component',
+ *                 html: 'Hello world!'
+ *             });
+ *         }
+ *     });
+ *
+ * [getting_started]: #!/guide/getting_started
  */
-Ext.setVersion('touch', '2.0.0.pr1');
+Ext.setVersion('touch', '2.0.0.pr3');
 
 Ext.apply(Ext, {
     /**
@@ -8117,7 +8154,6 @@ function(el){
             },
             touchGesture: {
                 xclass: 'Ext.event.publisher.TouchGesture',
-                moveThrottle: 3,
                 recognizers: {
                     drag: {
                         xclass: 'Ext.event.recognizer.Drag'
@@ -8174,6 +8210,98 @@ function(el){
         }
     },
 
+    log: function(msg) {
+        return Ext.Logger.log(msg);
+    },
+
+    /**
+     * Ext.setup is used to launch a basic application. It handles creating an {@link Ext.Viewport} instance for you.
+     *
+     *     Ext.setup({
+     *         onReady: function() {
+     *             Ext.Viewport.add({
+     *                 xtype: 'component',
+     *                 html: 'Hello world!'
+     *             });
+     *         }
+     *     });
+     *
+     * @param {Object} config An object with the following config options:
+     *
+     * @param {Function} config.onReady
+     * A function to be called when the application is ready. Your application logic should be here. Please see the example above.
+     *
+     * @param {Object} config.viewport
+     * An object to be used when creating the global {@link Ext.Viewport} instance. Please refer to the {@link Ext.Viewport}
+     * documentation for more information.
+     *
+     *     Ext.setup({
+     *         viewport: {
+     *             layout: 'vbox'
+     *         },
+     *         onReady: function() {
+     *             Ext.Viewport.add({
+     *                 flex: 1,
+     *                 html: 'top (flex: 1)'
+     *             });
+     *
+     *             Ext.Viewport.add({
+     *                 flex: 4,
+     *                 html: 'bottom (flex: 4)'
+     *             });
+     *         }
+     *     });
+     *
+     * @param {String[]} config.requires
+     * An array of required classes for your application which will be automatically loaded if {@link Ext.Loader#enabled} is set
+     * to `true`. Please refer to {@link Ext.Loader} and {@link Ext.Loader#require} for more information.
+     *
+     *     Ext.setup({
+     *         requires: ['Ext.Button', 'Ext.tab.Panel'],
+     *         onReady: function() {
+     *             //...
+     *         }
+     *     });
+     *
+     * @param {Object} config.eventPublishers
+     * Sencha Touch, by default, includes various {@link Ext.event.recognizer.Recognizer} subclasses to recognise events fired
+     * in your application. The list of default recognisers can be found in the documentation for {@link Ext.event.recognizer.Recognizer}.
+     *
+     * To change the default recognisers, you can use the following syntax:
+     *
+     *     Ext.setup({
+     *         eventPublishers: {
+     *             touchGesture: {
+     *                 recognizers: {
+     *                     swipe: {
+     *                         //this will include both vertical and horizontal swipe recognisers
+     *                         xclass: 'Ext.event.recognizer.Swipe'
+     *                     }
+     *                 }
+     *             }
+     *         },
+     *         onReady: function() {
+     *             //...
+     *         }
+     *     });
+     *
+     * You can also disable recognizers using this syntax:
+     *
+     *     Ext.setup({
+     *         eventPublishers: {
+     *             touchGesture: {
+     *                 recognizers: {
+     *                     swipe: null,
+     *                     pinch: null,
+     *                     rotate: null
+     *                 }
+     *             }
+     *         },
+     *         onReady: function() {
+     *             //...
+     *         }
+     *     });
+     */
     setup: function(config) {
         var defaultSetupConfig = Ext.defaultSetupConfig,
             onReady = config.onReady || Ext.emptyFn,
@@ -8191,6 +8319,7 @@ function(el){
         delete config.scope;
 
         requires.push('Ext.event.Dispatcher');
+        requires.push('Ext.dom.CompositeElementLite'); // this is so Ext.select exists
 
         Ext.require(requires);
 
@@ -8252,8 +8381,91 @@ function(el){
 
     /**
      * Loads Ext.app.Application class and starts it up with given configuration after the page is ready.
-     * See Ext.app.Application for details.
-     * @param {Object} config
+     *
+     *     Ext.application({
+     *         launch: function() {
+     *             alert('Application launched!');
+     *         }
+     *     });
+     *
+     * See {@link Ext.app.Application} for details.
+     *
+     * @param {Object} config An object with the following config options:
+     *
+     * @param {Function} config.launch
+     * A function to be called when the application is ready. Your application logic should be here. Please see {@link Ext.app.Application}
+     * for details.
+     *
+     * @param {Object} config.viewport
+     * An object to be used when creating the global {@link Ext.Viewport} instance. Please refer to the {@link Ext.Viewport}
+     * documentation for more information.
+     *
+     *     Ext.application({
+     *         viewport: {
+     *             layout: 'vbox'
+     *         },
+     *         launch: function() {
+     *             Ext.Viewport.add({
+     *                 flex: 1,
+     *                 html: 'top (flex: 1)'
+     *             });
+     *
+     *             Ext.Viewport.add({
+     *                 flex: 4,
+     *                 html: 'bottom (flex: 4)'
+     *             });
+     *         }
+     *     });
+     *
+     * @param {String[]} config.requires
+     * An array of required classes for your application which will be automatically loaded if {@link Ext.Loader#enabled} is set
+     * to `true`. Please refer to {@link Ext.Loader} and {@link Ext.Loader#require} for more information.
+     *
+     *     Ext.application({
+     *         requires: ['Ext.Button', 'Ext.tab.Panel'],
+     *         launch: function() {
+     *             //...
+     *         }
+     *     });
+     *
+     * @param {Object} config.eventPublishers
+     * Sencha Touch, by default, includes various {@link Ext.event.recognizer.Recognizer} subclasses to recognise events fired
+     * in your application. The list of default recognisers can be found in the documentation for {@link Ext.event.recognizer.Recognizer}.
+     *
+     * To change the default recognisers, you can use the following syntax:
+     *
+     *     Ext.application({
+     *         eventPublishers: {
+     *             touchGesture: {
+     *                 recognizers: {
+     *                     swipe: {
+     *                         //this will include both vertical and horizontal swipe recognisers
+     *                         xclass: 'Ext.event.recognizer.Swipe'
+     *                     }
+     *                 }
+     *             }
+     *         },
+     *         launch: function() {
+     *             //...
+     *         }
+     *     });
+     *
+     * You can also disable recognizers using this syntax:
+     *
+     *     Ext.application({
+     *         eventPublishers: {
+     *             touchGesture: {
+     *                 recognizers: {
+     *                     swipe: null,
+     *                     pinch: null,
+     *                     rotate: null
+     *                 }
+     *             }
+     *         },
+     *         launch: function() {
+     *             //...
+     *         }
+     *     });
      */
     application: function(config) {
         var onReady,
@@ -8389,9 +8601,17 @@ function(el){
                 return manager.instantiateByAlias(aliasNamespace + '.' + config.type, config);
             }
         }
+        else if (typeof config == 'string') {
+            return Ext.getCmp(config);
+        }
 
         if (config === true) {
-            return manager.instantiate(classReference);
+            if (instance) {
+                return instance;
+            }
+            else {
+                return manager.instantiate(classReference);
+            }
         }
 
 
@@ -8441,25 +8661,15 @@ function(el){
             message = "'" + oldName + "' is deprecated, please use '" + newName + "' instead";
         }
 
-        function getter() {
+        Ext.Object.redefineProperty(object, oldName,
+            function() {
 
-            return this[newName];
-        }
-
-        function setter(value) {
-            this[newName] = value;
-        }
-
-        if ('defineProperty' in Object) {
-            Object.defineProperty(object, oldName, {
-                get: getter,
-                set: setter
-            });
-        }
-        else {
-            object.__defineGetter__(oldName, getter);
-            object.__defineSetter__(oldName, setter);
-        }
+                return this[newName];
+            },
+            function(value) {
+                this[newName] = value;
+            }
+        );
     },
 
     /**
@@ -8616,12 +8826,20 @@ function(el){
                 scope: scope
             });
 
-            if (document.readyState.match(/interactive|complete|loaded/) !== null) {
-                triggerFn();
+            if (Ext.browser.is.PhoneGap) {
+                if (!Ext.readyListenerAttached) {
+                    Ext.readyListenerAttached = true;
+                    document.addEventListener('deviceready', triggerFn, false);
+                }
             }
-            else if (!Ext.readyListenerAttached) {
-                Ext.readyListenerAttached = true;
-                window.addEventListener('DOMContentLoaded', triggerFn, false);
+            else {
+                if (document.readyState.match(/interactive|complete|loaded/) !== null) {
+                    triggerFn();
+                }
+                else if (!Ext.readyListenerAttached) {
+                    Ext.readyListenerAttached = true;
+                    window.addEventListener('DOMContentLoaded', triggerFn, false);
+                }
             }
         }
     },
@@ -8823,6 +9041,7 @@ Ext.define('Ext.env.Browser', {
             engineName = engineNames.other,
             browserVersion = '',
             engineVersion = '',
+            isWebView = false,
             is, i, name;
 
         if (browserMatch) {
@@ -8875,8 +9094,17 @@ Ext.define('Ext.env.Browser', {
 
         this.setFlag('Standalone', !!navigator.standalone);
 
-        // Flag to check if it we are in the WebView (NKBuild)
-        this.setFlag('WebView', !!window.isNK);
+        if (typeof window.PhoneGap != 'undefined') {
+            isWebView = true;
+            this.setFlag('PhoneGap');
+        }
+        else if (!!window.isNK) {
+            isWebView = true;
+            this.setFlag('Sencha');
+        }
+
+        // Flag to check if it we are in the WebView
+        this.setFlag('WebView', isWebView);
 
         this.isStrict = document.compatMode == "CSS1Compat";
 
@@ -9382,16 +9610,23 @@ Ext.define('Ext.dom.AbstractQuery', {
 
         for (i = 0,qlen = q.length; i < qlen; i++) {
             if (typeof q[i] == 'string') {
-                nodes = root.querySelectorAll(q[i]);
+                
+                //support for node attribute selection
+                if (typeof q[i][0] == '@') {
+                    nodes = root.getAttributeNode(q[i].substring(1));
+                    results.push(nodes);
+                } else {
+                    nodes = root.querySelectorAll(q[i]);
 
-                for (j = 0,nlen = nodes.length; j < nlen; j++) {
-                    results.push(nodes[j]);
+                    for (j = 0,nlen = nodes.length; j < nlen; j++) {
+                        results.push(nodes[j]);
+                    }
                 }
             }
         }
 
         return results;
-    },
+    },    
 
     /**
      * Selects a single element.
@@ -11008,11 +11243,21 @@ Element.override({
       * Gets the current position of the element based on page coordinates.  Element must be part of the DOM tree to have page coordinates (display:none or elements not appended return false).
       * @return {Array} The XY position of the element
       */
+
     getXY: function() {
-        // @FEATUREDETECT
-        var point = window.webkitConvertPointFromNodeToPage(this.dom, new WebKitPoint(0, 0));
-        return [point.x, point.y];
-    },
+        var webkitConvert = window.webkitConvertPointFromNodeToPage;
+        if (webkitConvert) {
+            return function() {
+                var point = webkitConvert(this.dom, new WebKitPoint(0, 0));
+                return [point.x, point.y];
+            }
+        }
+        else return function() {
+            var rect = this.dom.getBoundingClientRect(),
+                rnd = Math.round;
+            return [rnd(rect.left + window.pageXOffset), rnd(rect.top + window.pageYOffset)];
+        }
+    }(),
 
     /**
       * Returns the offsets of this element from the passed element. Both element must be part of the DOM tree and not have display:none to have page coordinates.
@@ -12447,11 +12692,15 @@ this.ExtBootstrapData = {
         ],
         "Ext.Container":["widget.container"
         ],
+        "Ext.Decorator":[],
         "Ext.EventedBase":[],
         "Ext.Img":["widget.image"
         ],
         "Ext.ItemCollection":[],
-        "Ext.LoadMask":[],
+        "Ext.Label":["widget.label"
+        ],
+        "Ext.LoadMask":["widget.loadmask"
+        ],
         "Ext.Map":["widget.map"
         ],
         "Ext.Mask":["widget.mask"
@@ -12459,8 +12708,6 @@ this.ExtBootstrapData = {
         "Ext.Media":["widget.media"
         ],
         "Ext.MessageBox":[],
-        "Ext.NavigationBar":["widget.navigationbar"
-        ],
         "Ext.Panel":["widget.panel"
         ],
         "Ext.SegmentedButton":["widget.segmentedbutton"
@@ -12473,6 +12720,8 @@ this.ExtBootstrapData = {
         "Ext.TaskQueue":[],
         "Ext.Title":["widget.title"
         ],
+        "Ext.TitleBar":["widget.titlebar"
+        ],
         "Ext.Toolbar":["widget.toolbar"
         ],
         "Ext.Validator":[],
@@ -12483,10 +12732,12 @@ this.ExtBootstrapData = {
         "Ext.behavior.Behavior":[],
         "Ext.behavior.Draggable":[],
         "Ext.behavior.Scrollable":[],
+        "Ext.behavior.Translatable":[],
         "Ext.carousel.Carousel":["widget.carousel"
         ],
         "Ext.carousel.Indicator":["widget.carouselindicator"
         ],
+        "Ext.carousel.Item":[],
         "Ext.dataview.ComponentList":["widget.componentlist"
         ],
         "Ext.dataview.ComponentView":["widget.componentview"
@@ -12576,17 +12827,12 @@ this.ExtBootstrapData = {
         ],
         "Ext.field.Url":["widget.urlfield"
         ],
-        "Ext.field.slider.Thumb":["widget.thumb"
-        ],
-        "Ext.form.ClearIcon":["widget.clearicon"
-        ],
         "Ext.form.FieldSet":["widget.fieldset"
-        ],
-        "Ext.form.Label":["widget.label"
         ],
         "Ext.form.Panel":["widget.formpanel"
         ],
         "Ext.fx.Animation":[],
+        "Ext.fx.Easing":[],
         "Ext.fx.Runner":[],
         "Ext.fx.State":[],
         "Ext.fx.animation.Abstract":[],
@@ -12605,6 +12851,16 @@ this.ExtBootstrapData = {
         "Ext.fx.animation.SlideOut":[],
         "Ext.fx.animation.Wipe":[],
         "Ext.fx.animation.WipeOut":[],
+        "Ext.fx.easing.Abstract":[],
+        "Ext.fx.easing.Bounce":[],
+        "Ext.fx.easing.BoundMomentum":[],
+        "Ext.fx.easing.EaseIn":["easing.ease-in"
+        ],
+        "Ext.fx.easing.EaseOut":["easing.ease-out"
+        ],
+        "Ext.fx.easing.Linear":["easing.linear"
+        ],
+        "Ext.fx.easing.Momentum":[],
         "Ext.fx.layout.Card":[],
         "Ext.fx.layout.card.Abstract":[],
         "Ext.fx.layout.card.Cube":["fx.layout.card.cube"
@@ -12626,6 +12882,8 @@ this.ExtBootstrapData = {
         "Ext.layout.AbstractBox":[],
         "Ext.layout.Card":["layout.card"
         ],
+        "Ext.layout.Carousel":["layout.carousel"
+        ],
         "Ext.layout.Default":["layout.auto",
             "layout.default"
         ],
@@ -12634,8 +12892,6 @@ this.ExtBootstrapData = {
         "Ext.layout.HBox":["layout.hbox"
         ],
         "Ext.layout.Layout":[],
-        "Ext.layout.Navigation":["layout.navigation"
-        ],
         "Ext.layout.VBox":["layout.vbox"
         ],
         "Ext.log.Base":[],
@@ -12654,11 +12910,18 @@ this.ExtBootstrapData = {
         "Ext.mixin.Observable":[],
         "Ext.mixin.Selectable":[],
         "Ext.mixin.Traversable":[],
+        "Ext.navigation.Bar":["widget.navigationbar"
+        ],
+        "Ext.navigation.View":["widget.navigationview"
+        ],
         "Ext.picker.Date":["widget.datepicker"
         ],
         "Ext.picker.Picker":["widget.picker"
         ],
         "Ext.picker.Slot":["widget.pickerslot"
+        ],
+        "Ext.plugin.ListPaging":[],
+        "Ext.plugin.PullRefresh":["plugin.pullrefresh"
         ],
         "Ext.scroll.Indicator":[],
         "Ext.scroll.Scroller":[],
@@ -12677,6 +12940,11 @@ this.ExtBootstrapData = {
         "Ext.scroll.scroller.CssTransform":[],
         "Ext.scroll.scroller.Infinite":[],
         "Ext.scroll.scroller.ScrollPosition":[],
+        "Ext.slider.Slider":["widget.slider"
+        ],
+        "Ext.slider.Thumb":["widget.thumb"
+        ],
+        "Ext.slider.Toggle":[],
         "Ext.tab.Bar":["widget.tabbar"
         ],
         "Ext.tab.Panel":["widget.tabpanel"
@@ -12692,6 +12960,10 @@ this.ExtBootstrapData = {
         "Ext.util.SizeMonitor":[],
         "Ext.util.TapRepeater":[],
         "Ext.util.Timeline":[],
+        "Ext.util.Translatable":[],
+        "Ext.util.translatable.Abstract":[],
+        "Ext.util.translatable.CssTransform":[],
+        "Ext.util.translatable.ScrollPosition":[],
         "Ext.viewport.Android":[],
         "Ext.viewport.Default":["widget.viewport"
         ],
@@ -12707,7 +12979,6 @@ this.ExtBootstrapData = {
         "Ext.StoreMgr":"Ext.data.StoreManager",
         "Ext.data.StoreMgr":"Ext.data.StoreManager",
         "Ext.StoreManager":"Ext.data.StoreManager",
-        "Ext.data.XmlStore":"Ext.data.XmlStore",
         "Ext.data.Association":"Ext.data.association.Association",
         "Ext.data.BelongsToAssociation":"Ext.data.association.BelongsTo",
         "Ext.data.HasManyAssociation":"Ext.data.association.HasMany",
@@ -12780,9 +13051,11 @@ this.ExtBootstrapData = {
         "Ext.layout.VBoxLayout":"Ext.layout.VBox",
         "Ext.util.Observable":"Ext.mixin.Observable",
         "Ext.AbstractStoreSelectionModel":"Ext.mixin.Selectable",
+        "Ext.NavigationView":"Ext.navigation.View",
         "Ext.DatePicker":"Ext.picker.Date",
         "Ext.Picker":"Ext.picker.Picker",
         "Ext.Picker.Slot":"Ext.picker.Slot",
+        "Ext.plugins.ListPagingPlugin":"Ext.plugin.ListPaging",
         "Ext.util.Indicator":"Ext.scroll.Indicator",
         "Ext.util.Scroller":"Ext.scroll.Scroller",
         "Ext.util.ScrollView":"Ext.scroll.View",

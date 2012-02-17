@@ -2,23 +2,8 @@
  * @private
  */
 Ext.define('Ext.EventedBase', {
+
     mixins: ['Ext.mixin.Observable'],
-
-    initialized: false,
-
-    isInitialized: function() {
-        return this.initialized;
-    },
-
-    constructor: function(config) {
-        this.initConfig(config);
-
-        this.initialized = true;
-
-        this.initialize();
-    },
-
-    initialize: Ext.emptyFn,
 
     doSet: function(me, value, oldValue, options) {
         var nameMap = options.nameMap;

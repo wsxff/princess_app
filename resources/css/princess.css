@@ -1,0 +1,18 @@
+
+.item_icon{float:left;margin:5px;}
+.menu_icon{margin-right:30px;}
+.category_icon{height:35px;width:35px; margin-right:15px;}
+.item_title{font-size:large; font-weight:300;}
+.small_title{color:#999; font-size:medium;}
+.item_content{vertical-align:middle;}
+
+#princess_menu .item_content{margin-top:15px;}
+#p_list img{width:45px;height:45px;}
+
+
+/* 
+todo:
+list 事件按钮自定义，需要重新编译css 修改如下位置
+x-list-disclosure {  -webkit-mask: } 
+*/
+

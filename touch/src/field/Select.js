@@ -12,7 +12,7 @@ new Ext.field.Select({
  */
 Ext.define('Ext.field.Select', {
     extend: 'Ext.field.Text',
-    alias : 'widget.selectfield',
+    xtype: 'selectfield',
     alternateClassName: 'Ext.form.Select',
     requires: [
         'Ext.Panel',
@@ -25,7 +25,8 @@ Ext.define('Ext.field.Select', {
      * @event change
      * Fires when an option selection has changed
      * @param {Ext.field.Select} this
-     * @param {Mixed} value
+     * @param {Mixed} newValue The new value
+     * @param {Mixed} oldValue The old value
      */
 
     config: {
@@ -35,14 +36,12 @@ Ext.define('Ext.field.Select', {
         /**
          * @cfg {Number} tabIndex
          * @hide
-         * @accessor
          */
         tabIndex: -1,
 
         /**
          * @cfg {Boolean} useClearIcon
          * @hide
-         * @accessor
          */
 
         /**
@@ -91,9 +90,8 @@ Ext.define('Ext.field.Select', {
         /**
          * @cfg {Object} input
          * @hide
-         * @accessor
          */
-        input: {
+        component: {
             useMask: true
         },
 
@@ -110,14 +108,17 @@ Ext.define('Ext.field.Select', {
      */
     record: null,
 
+    /**
+     * @private
+     */
+    previousRecord: null,
+
     // @private
     constructor: function(config) {
         config = config || {};
 
         if (!config.store) {
-            config.store = Ext.create('Ext.data.Store', {
-                fields: [config.valueField, config.displayField]
-            });
+            config.store = true;
         }
 
         this.callParent([config]);
@@ -125,25 +126,51 @@ Ext.define('Ext.field.Select', {
 
     // @private
     initialize: function() {
-        this.on({
-            scope   : this,
-            delegate: 'input',
+        this.callParent();
 
+        this.getComponent().on({
+            scope: this,
             masktap: 'onMaskTap'
         });
+    },
 
-        this.callParent();
+    applyValue: function(value) {
+        var record = value,
+            index;
+
+        if (!(value instanceof Ext.data.Model)) {
+            index = this.getStore().find(this.getValueField(), value);
+
+            if (index == -1) {
+                index = this.getStore().find(this.getDisplayField(), value);
+            }
+
+            record = this.getStore().getAt(index);
+        }
+
+        return record;
+    },
+
+    updateValue: function(newValue, oldValue) {
+        this.previousRecord = oldValue;
+
+        if (newValue) {
+            this.record = newValue;
+
+            this.callParent([newValue.get(this.getDisplayField())]);
+        }
+
+        this.fireEvent('change', this, newValue, oldValue);
     },
 
     getValue: function() {
         var record = this.record;
 
-        return (record) ? this.record.get(this.getValueField()) : null;
+        return (record) ? record.get(this.getValueField()) : null;
     },
 
-    updateValue: function(newValue, oldValue) {
-        this.callParent(arguments);
-        this.fireAction('change', [this, newValue, oldValue]);
+    getRecord: function() {
+        return this.record;
     },
 
     // @private
@@ -208,14 +235,22 @@ Ext.define('Ext.field.Select', {
 
     // @private
     showComponent: function() {
-        if (Ext.os.deviceType === 'Phone') {
+        //check if the store is empty, if it is, return
+        if (this.getStore().getCount() === 0) {
+            return;
+        }
+
+        //hide the keyboard
+        Ext.Viewport.hideKeyboard();
+
+        if (Ext.os.deviceType == 'Phone') {
             var picker = this.getPicker(),
                 name   = this.getName(),
                 value  = {};
 
-            value[name] = this.getValue();
+            value[name] = this.record.get(this.getValueField());
+            picker.setValue(value);
             picker.show();
-            // picker.setValue(value);
         } else {
             var listPanel = this.getListPanel(),
                 list = listPanel.down('list'),
@@ -224,15 +259,15 @@ Ext.define('Ext.field.Select', {
                 record = store.getAt((index == -1) ? 0 : index);
 
             listPanel.showBy(this);
-            list.select(record);
+            list.select(record, null, true);
         }
     },
 
     // @private
     onListSelect: function(item, record) {
+        var me = this;
         if (record) {
-            this.record = record;
-            this.setValue(record.get(this.getDisplayField()));
+            me.setValue(record);
         }
     },
 
@@ -246,14 +281,14 @@ Ext.define('Ext.field.Select', {
 
     // @private
     onPickerChange: function(picker, value) {
-        var currentValue = this.getValue(),
-            newValue = value[this.getName()],
-            store = this.getStore(),
-            index = store.find(this.getValueField(), newValue);
+        var me = this,
+            currentValue = me.getValue(),
+            newValue = value[me.getName()],
+            store = me.getStore(),
+            index = store.find(me.getValueField(), newValue);
             record = store.getAt(index);
-        
-        this.record = record;
-        this.setValue(record.get(this.getDisplayField()));
+
+        me.setValue(record);
     },
 
     /**
@@ -282,17 +317,50 @@ selectBox.setOptions(
             store.loadData(newOptions);
 
             record = store.getAt(0);
-            this.record = record;
-            this.setValue(record.get(this.getDisplayField()));
+            this.setValue(record);
         }
+    },
+
+    applyStore: function(store) {
+        if (store === true) {
+            store = Ext.create('Ext.data.Store', {
+                fields: [this.getValueField(), this.getDisplayField()]
+            });
+        }
+
+        if (store) {
+            store = Ext.data.StoreManager.lookup(store);
+
+            store.on({
+                scope: this,
+                datachanged: this.onStoreDataChanged
+            });
+        }
+
+        return store;
     },
 
     updateStore: function(newStore) {
         var record = (newStore) ? newStore.getAt(0) : null;
 
         if (newStore && record) {
-            this.record = record;
-            this.setValue(record.get(this.getDisplayField()));
+            this.setValue(record);
+        }
+    },
+
+    /**
+     * Called when the internal {@link #store}'s data has changed
+     */
+    onStoreDataChanged: function(store, records) {
+        var initialConfig = this.getInitialConfig(),
+            value = this.getValue();
+
+        if (value) {
+            this.updateValue(this.applyValue(value));
+        } else if (initialConfig.hasOwnProperty('value')) {
+            this.setValue(initialConfig.value);
+        } else if (store.getCount() > 0) {
+            this.setValue(store.getAt(0));
         }
     },
 
@@ -302,12 +370,12 @@ selectBox.setOptions(
      */
     reset: function() {
         var store = this.getStore(),
-            record = (store) ? store.getAt(0) : null;
+            record = (this.originalValue) ? this.originalValue : store.getAt(0);
 
         if (store && record) {
-            this.record = record;
-            this.setValue(record.get(this.getDisplayField()));
+            this.setValue(record);
         }
+
         return this;
     },
 

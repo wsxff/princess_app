@@ -13,13 +13,13 @@ Ext.define('Ext.AbstractComponent', {
             config = members.config,
             cachedConfig = members.cachedConfig,
             cachedConfigList = prototype.cachedConfigList,
-            hasTemplateConfigMap = prototype.hasTemplateConfigMap,
+            hasCachedConfig = prototype.hasCachedConfig,
             name, value;
 
         delete members.cachedConfig;
 
         prototype.cachedConfigList = cachedConfigList = (cachedConfigList) ? cachedConfigList.slice() : [],
-        prototype.hasTemplateConfigMap = hasTemplateConfigMap = (hasTemplateConfigMap) ? Ext.Object.chain(hasTemplateConfigMap) : {};
+        prototype.hasCachedConfig = hasCachedConfig = (hasCachedConfig) ? Ext.Object.chain(hasCachedConfig) : {};
 
         if (!config) {
             members.config = config = {};
@@ -29,8 +29,8 @@ Ext.define('Ext.AbstractComponent', {
             if (cachedConfig.hasOwnProperty(name)) {
                 value = cachedConfig[name];
 
-                if (!hasTemplateConfigMap[name]) {
-                    hasTemplateConfigMap[name] = true;
+                if (!hasCachedConfig[name]) {
+                    hasCachedConfig[name] = true;
                     cachedConfigList.push(name);
                 }
 
@@ -39,11 +39,15 @@ Ext.define('Ext.AbstractComponent', {
         }
     },
 
+    initialized: false,
+
     constructor: function(config) {
         var prototype = this.self.prototype,
             configNameCache, defaultConfig, cachedConfigList, initConfigList, hasInitConfigMap,
             referenceList, reference, renderTemplate, renderElement, elements,
             i, ln, element, name, nameMap, initializedName, internalName;
+
+        this.initialConfig = config;
 
         this.initElement();
 
@@ -93,11 +97,12 @@ Ext.define('Ext.AbstractComponent', {
             }
         }
 
-        this.initConfig(config);
-
-        this.initialized = true;
-
         this.initialize();
+    },
+
+    initialize: function() {
+        this.initConfig(this.initialConfig);
+        this.initialized = true;
     },
 
     getElementConfig: Ext.emptyFn,
@@ -113,13 +118,15 @@ Ext.define('Ext.AbstractComponent', {
      * it's ever used
      */
     addReferenceNode: function(name, domNode) {
-        this.__defineGetter__(name, function() {
-            var reference;
+        Ext.Object.redefineProperty(this, name,
+            function() {
+                var reference;
 
-            delete this[name];
-            this[name] = reference = new Ext.Element(domNode);
-            return reference;
-        });
+                delete this[name];
+                this[name] = reference = new Ext.Element(domNode);
+                return reference;
+            }
+        );
     },
 
     initElement: function() {

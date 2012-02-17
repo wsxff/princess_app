@@ -6,11 +6,12 @@
  * Here is an example of the usage in a {@link Ext.List}:
  *
  *     @example miniphone preview
- *     Ext.regModel('Contact', {
+ *     Ext.define('Contact', {
+ *        extend: 'Ext.data.Model',
  *        fields: ['firstName', 'lastName']
  *     });
  *
- *     var store = new Ext.data.JsonStore({
+ *     var store = Ext.create('Ext.data.Store', {
  *        model: 'Contact',
  *        sorters: 'lastName',
  *
@@ -36,7 +37,7 @@
  *        ]
  *     });
  *
- *     var list = new Ext.List({
+ *     var list = Ext.create('Ext.List', {
  *        fullscreen: true,
  *        itemTpl: '<div class="contact">{firstName} <strong>{lastName}</strong></div>',
  *        store: store
@@ -52,6 +53,16 @@ Ext.define('Ext.dataview.List', {
         'Ext.dataview.IndexBar',
         'Ext.dataview.ListItemHeader'
     ],
+
+    /**
+     * @event disclose
+     * @preventable doDisclose
+     * Fires whenever a disclosure is handled
+     * @param {Ext.data.Model} record The record assisciated to the item
+     * @param {HTMLElement} target The element doubletapped
+     * @param {Number} index The index of the item doubletapped
+     * @param {Ext.EventObject} e The event object
+     */
 
     config: {
         /**
@@ -87,13 +98,16 @@ Ext.define('Ext.dataview.List', {
         /**
          * @cfg {Boolean} pinHeaders
          * Whether or not to pin headers on top of item groups while scrolling for an iPhone native list experience.
-         * Defaults to <tt>false</tt> on Android and Blackberry (for performance reasons)
-         * Defaults to <tt>true</tt> on other devices.
          * @accessor
          */
         pinHeaders: true,
 
-        grouped: false,
+        /**
+         * @cfg {Boolean} grouped
+         * Whether or not to group items in the provided Store with a header for each item.
+         * @accessor
+         */
+        grouped: null,
 
         /**
          * @cfg {Boolean/Function/Object} onItemDisclosure
@@ -112,15 +126,13 @@ Ext.define('Ext.dataview.List', {
     },
 
     constructor: function() {
-        this.previousHeaderIndices = [];
-
         this.translateHeader = (Ext.os.is.Android2) ? this.translateHeaderCssPosition : this.translateHeaderTransform;
         this.callParent(arguments);
     },
 
     initialize: function() {
         var me = this;
-        me.callParent(arguments);
+        me.callParent();
         me.elementContainer.element.on({
             delegate: '.' + this.getBaseCls() + '-disclosure',
             tap: 'handleItemDisclosure',
@@ -129,9 +141,7 @@ Ext.define('Ext.dataview.List', {
     },
 
     applyIndexBar: function(indexBar) {
-        if (this.getGrouped()) {
-            return Ext.factory(indexBar, Ext.dataview.IndexBar, this.getIndexBar());
-        }
+        return Ext.factory(indexBar, Ext.dataview.IndexBar, this.getIndexBar());
     },
 
     updateIndexBar: function(indexBar) {
@@ -147,55 +157,120 @@ Ext.define('Ext.dataview.List', {
         }
     },
 
+    updateGrouped: function(grouped) {
+        if (grouped) {
+            this.doRefreshHeaders();
+            this.updatePinHeaders(this.getPinHeaders());
+        }
+        else {
+            this.doRemoveHeaders();
+            this.updatePinHeaders(null);
+        }
+    },
+
     updatePinHeaders: function(pinnedHeaders) {
         var scrollable = this.getScrollable(),
-            store = this.getStore(),
-            scrollView = this.getScrollableBehavior().getScrollView(),
-            scrollViewElement = scrollView.getElement(),
-            header, scroller;
+            scroller;
 
-        if (scrollable && this.getGrouped()) {
+        if (scrollable) {
             scroller = scrollable.getScroller();
-            if (pinnedHeaders) {
-                scroller.on({
-                    refresh: 'doRefreshHeaders',
-                    scroll: 'onScroll',
-                    scope: this
-                });
+        }
 
-                store.on({
-                    datachanged: 'doRefreshHeaders',
-                    scope: this
-                });
+        if (!scrollable) {
+            return;
+        }
 
-                this.header = header = Ext.create('Ext.dataview.ListItemHeader', {html: ' ', cls: 'x-list-header-swap'});
-                scrollViewElement.dom.insertBefore(header.element.dom, scroller.getContainer().dom.nextSibling);
-            } else {
-                scroller.un({
-                    refresh: 'onScrollerRefresh',
-                    scroll: 'onScroll',
-                    scope: this
-                });
+        if (pinnedHeaders && this.getGrouped()) {
+            scroller.on({
+                refresh: 'doRefreshHeaders',
+                scroll: 'onScroll',
+                scope: this
+            });
 
-                store.un({
-                    datachanged: 'doRefreshHeaders',
-                    scope: this
-                });
+            if (!this.header || !this.header.renderElement.dom) {
+                this.createHeader();
+            }
+        } else {
+            scroller.un({
+                refresh: 'onScrollerRefresh',
+                scroll: 'onScroll',
+                scope: this
+            });
 
-                if (this.header) {
-                    this.header.destroy();
-                }
+            if (this.header) {
+                this.header.destroy();
             }
         }
+    },
+
+    createHeader: function() {
+        var header,
+            scrollable = this.getScrollable(),
+            scroller, scrollView, scrollViewElement;
+
+        if (scrollable) {
+            scroller = scrollable.getScroller();
+            scrollView = this.getScrollableBehavior().getScrollView();
+            scrollViewElement = scrollView.getElement();
+        }
+        else {
+            return;
+        }
+
+        this.header = header = Ext.create('Ext.dataview.ListItemHeader', {
+            html: ' ',
+            cls: 'x-list-header-swap'
+        });
+        scrollViewElement.dom.insertBefore(header.element.dom, scroller.getContainer().dom.nextSibling);
+        this.translateHeader(1000);
+    },
+
+    // We need to use the same events as the DataView so we are sure we run AFTER the list populates
+    refresh: function() {
+        this.callParent();
+        this.doRefreshHeaders();
+    },
+
+    onStoreAdd: function() {
+        this.callParent(arguments);
+        this.doRefreshHeaders();
+    },
+
+    onStoreRemove: function() {
+        this.callParent(arguments);
+        this.doRefreshHeaders();
+    },
+
+    onStoreUpdate: function() {
+        this.callParent(arguments);
+        this.doRefreshHeaders();
+    },
+
+    onStoreClear: function() {
+        this.callParent();
+        if (this.header) {
+            this.header.destroy();
+        }
+        this.doRefreshHeaders();
     },
 
     // @private
     getClosestGroups : function() {
         var groups = this.pinHeaderInfo.offsets,
-            pos = this.getScrollable().getScroller().position,
+            scrollable = this.getScrollable(),
             ln = groups.length,
             i = 0,
-            group, current, next;
+            pos, group, current, next;
+
+        if (scrollable) {
+            pos = scrollable.getScroller().position;
+        }
+        else {
+            return {
+                current: 0,
+                next: 0
+            };
+        }
 
         for (; i < ln; i++) {
             group = groups[i];
@@ -213,27 +288,43 @@ Ext.define('Ext.dataview.List', {
     },
 
     doRefreshHeaders: function() {
-        var headerIndicis = this.previousHeaderIndices,
-            ln = headerIndicis.length,
+        if (!this.getGrouped()) {
+            return false;
+        }
+
+        var headerIndices = this.findGroupHeaderIndices(),
+            ln = headerIndices.length,
             items = this.getViewItems(),
             headerInfo = this.pinHeaderInfo = {offsets: []},
             headerOffsets = headerInfo.offsets,
-            i, headerItem, header;
+            scrollable = this.getScrollable(),
+            scroller, scrollPosition, i, headerItem, header;
 
         if (ln) {
             for (i = 0; i < ln; i++) {
-                headerItem = items[headerIndicis[i].index];
-                header = this.getItemHeader(headerItem);
+                headerItem = items[headerIndices[i]];
+                if (headerItem) {
+                    header = this.getItemHeader(headerItem);
 
-                headerOffsets.push({
-                    header: header,
-                    offset: headerItem.offsetTop
-                });
+                    headerOffsets.push({
+                        header: header,
+                        offset: headerItem.offsetTop
+                    });
+                }
             }
 
             headerInfo.closest = this.getClosestGroups();
             this.setActiveGroup(headerInfo.closest.current);
-            headerInfo.headerHeight = Ext.get(header).getHeight();
+            if (header) {
+                headerInfo.headerHeight = Ext.fly(header).getHeight();
+            }
+
+            // Ensure the pinned header is positioned correctly
+            if (scrollable) {
+                scroller = scrollable.getScroller();
+                scrollPosition = scroller.position;
+                this.onScroll(scroller, scrollPosition.x, scrollPosition.y);
+            }
         }
     },
 
@@ -247,20 +338,28 @@ Ext.define('Ext.dataview.List', {
             closest = headerInfo.closest,
             activeGroup = me.activeGroup,
             headerHeight = headerInfo.headerHeight,
-            next = closest.next,
-            current = closest.current;
+            next, current;
+
+        if (!closest) {
+            return;
+        }
+
+        next = closest.next,
+        current = closest.current;
+
+        if (!this.header || !this.header.renderElement.dom) {
+            this.createHeader();
+        }
 
         if (y <= 0) {
             if (activeGroup) {
                 me.setActiveGroup(false);
                 closest.next = current;
             }
+            this.translateHeader(1000);
             return;
         }
-        else if (
-            (next && y > next.offset) ||
-            (y < current.offset)
-        ) {
+        else if ((next && y > next.offset) || (current && y < current.offset)) {
             closest = headerInfo.closest = this.getClosestGroups();
             next = closest.next;
             current = closest.current;
@@ -290,14 +389,17 @@ Ext.define('Ext.dataview.List', {
      * @private
      */
     setActiveGroup : function(group) {
-        var me = this;
-        if (group) {
-            if (!me.activeGroup || me.activeGroup.header != group.header) {
-                me.header.setHtml(group.header.innerHTML);
-                me.header.show();
+        var me = this,
+            header = me.header;
+        if (header) {
+            if (group) {
+                if (!me.activeGroup || me.activeGroup.header != group.header) {
+                    header.setHtml(group.header.innerHTML);
+                    header.show();
+                }
+            } else if (header && header.dom) {
+                header.hide();
             }
-        } else {
-            me.header.hide();
         }
 
         this.activeGroup = group;
@@ -308,8 +410,15 @@ Ext.define('Ext.dataview.List', {
             store = this.getStore(),
             groups = store.getGroups(),
             ln = groups.length,
-            scroller = this.getScrollable().getScroller(),
-            group, i, closest, id, item;
+            scrollable = this.getScrollable(),
+            scroller, group, i, closest, id, item;
+
+        if (scrollable) {
+            scroller = this.getScrollable().getScroller();
+        }
+        else {
+            return;
+        }
 
         for (i = 0; i < ln; i++) {
             group = groups[i];
@@ -323,18 +432,20 @@ Ext.define('Ext.dataview.List', {
             }
         }
 
-        item = this.getViewItems()[store.indexOf(closest.children[0])];
+        if (scrollable && closest) {
+            item = this.getViewItems()[store.indexOf(closest.children[0])];
 
-        //stop the scroller from scrolling
-        scroller.stopAnimation();
+            //stop the scroller from scrolling
+            scroller.stopAnimation();
 
-        //make sure the new offsetTop is not out of bounds for the scroller
-        var containerSize = scroller.getContainerSize().y,
-            size = scroller.getSize().y,
-            maxOffset = size - containerSize,
-            offset = (item.offsetTop > maxOffset) ? maxOffset : item.offsetTop;
+            //make sure the new offsetTop is not out of bounds for the scroller
+            var containerSize = scroller.getContainerSize().y,
+                size = scroller.getSize().y,
+                maxOffset = size - containerSize,
+                offset = (item.offsetTop > maxOffset) ? maxOffset : item.offsetTop;
 
-        scroller.scrollTo(0, offset);
+            scroller.scrollTo(0, offset);
+        }
     },
 
     applyOnItemDisclosure: function(config) {
@@ -372,53 +483,75 @@ Ext.define('Ext.dataview.List', {
     handleItemDisclosure: function(e) {
         var me = this,
             item = e.getTarget().parentNode,
-            index = item.getAttribute('itemIndex'),
-            record = me.getStore().getAt(index),
-            onItemDisclosure = me.getOnItemDisclosure();
+            index = me.getViewItems().indexOf(item),
+            record = me.getStore().getAt(index);
 
         if (me.getPreventSelectionOnDisclose()) {
             e.stopEvent();
         }
         me.fireAction('disclose', [record, item, index, e], 'doDisclose');
+    },
+
+    doDisclose: function(record, item, index, e) {
+        var me = this,
+            onItemDisclosure = me.getOnItemDisclosure();
 
         if (onItemDisclosure && onItemDisclosure.handler) {
             onItemDisclosure.handler.call(me, record, item, index);
         }
     },
 
-    doDisclose: Ext.emptyFn,
+    updateBaseCls: function(newBaseCls, oldBaseCls) {
+        var me = this;
+        me.callParent(arguments);
+        me.itemClsShortCache = newBaseCls + '-item';
+
+        me.headerClsShortCache = newBaseCls + '-header';
+        me.headerClsCache = '.' + me.headerClsShortCache;
+
+        me.headerItemClsShortCache = newBaseCls + '-header-item';
+
+        me.footerClsShortCache = newBaseCls + '-footer-item';
+        me.footerClsCache = '.' + me.footerClsShortCache;
+
+        me.labelClsShortCache = newBaseCls + '-item-label';
+        me.labelClsCache = '.' + me.labelClsShortCache;
+
+        me.disclosureClsShortCache = newBaseCls + '-disclosure';
+        me.disclosureClsCache = '.' + me.disclosureClsShortCache;
+
+        me.iconClsShortCache = newBaseCls + '-icon';
+        me.iconClsCache = '.' + me.iconClsShortCache;
+    },
+
+    hiddenDisplayCache: Ext.baseCSSPrefix + 'hidden-display',
 
     updateListItem: function(record, item) {
-        var baseCls = this.getBaseCls(),
-            extItem = Ext.get(item),
-            innerItem = extItem.down('.' + baseCls + '-item-label', true),
-            index = this.getStore().indexOf(record),
+        var extItem = Ext.fly(item),
+            innerItem = extItem.down(this.labelClsCache, true),
             data = record.data,
             disclosure = data && data.hasOwnProperty('disclosure'),
             iconSrc = data && data.hasOwnProperty('iconSrc'),
             disclosureEl, iconEl;
 
-        item.setAttribute('itemIndex', index);
-        innerItem.innerHTML = this.getItemTpl().apply(record.data);
+        innerItem.innerHTML = this.getItemTpl().apply(data);
 
         if (this.getDisclosure() && disclosure) {
-            disclosureEl = extItem.down('.' + baseCls + '-disclosure');
-            disclosureEl[disclosure ? 'removeCls' : 'addCls'](Ext.baseCSSPrefix + 'hidden-display');
+            disclosureEl = extItem.down(this.disclosureClsCache);
+            disclosureEl[disclosure ? 'removeCls' : 'addCls'](this.hiddenDisplayCache);
         }
 
         if (this.getIcon()) {
-            iconEl = extItem.down('.' + baseCls + '-icon', true);
+            iconEl = extItem.down(this.iconClsCache, true);
             iconEl.style.backgroundImage = iconSrc ? 'url(' + iconSrc + ')' : '';
         }
     },
 
     getItemElementConfig: function(index, data) {
-        var baseCls = this.getBaseCls(),
-            config = {
-                cls: baseCls + '-item',
-                itemIndex: index,
+        var config = {
+                cls: this.itemClsShortCache,
                 children: [{
-                    cls: baseCls + '-item-label',
+                    cls: this.labelClsShortCache,
                     html: this.getItemTpl().apply(data)
                 }]
             },
@@ -427,14 +560,14 @@ Ext.define('Ext.dataview.List', {
         if (this.getIcon()) {
             iconSrc = data.iconSrc;
             config.children.push({
-                cls: baseCls + '-icon',
+                cls: this.iconClsShortCache,
                 style: 'background-image: ' + iconSrc ? 'url(' + iconSrc + ')' : ''
             });
         }
 
         if (this.getDisclosure()) {
             config.children.push({
-                cls: baseCls + '-disclosure ' + ((data.disclosure === false) ? Ext.baseCSSPrefix + 'hidden-display' : '')
+                cls: this.disclosureClsShortCache + ((data.disclosure === false) ? this.hiddenDisplayCache : '')
             });
         }
         return config;
@@ -449,62 +582,79 @@ Ext.define('Ext.dataview.List', {
             groups = store.getGroups(),
             groupLn = groups.length,
             items = me.getViewItems(),
-            i = 0,
-            previousHeaderIndices = me.previousHeaderIndices,
-            previousIndexLn = previousHeaderIndices.length,
-            newHeaderIndices = [],
-            firstGroupedRecord, index, oldItemWithHeader;
+            newHeaderItems = [],
+            footerClsShortCache = me.footerClsShortCache,
+            i, firstGroupedRecord, index, item;
 
-        // Add header to an item if needed
-        for (; i < groupLn; i++) {
-            firstGroupedRecord = groups[i].children[0];
-            index = store.indexOf(firstGroupedRecord);
-            if (previousHeaderIndices.indexOf(firstGroupedRecord) == -1) {
-                me.doAddHeader(items[index], store.getGroupString(firstGroupedRecord));
-            }
-            newHeaderIndices.push(firstGroupedRecord);
-        }
+        me.doRemoveHeaders();
+        me.doRemoveFooterCls();
 
-        // Remove header from an item if needed
-        for (i = 0; i < previousIndexLn; i++) {
-            oldItemWithHeader = previousHeaderIndices[i];
-            if (newHeaderIndices.indexOf(oldItemWithHeader) == -1) {
-                oldItemWithHeader = items[store.indexOf(oldItemWithHeader)];
-                if (oldItemWithHeader) {
-                    me.doRemoveHeader(oldItemWithHeader);
+        if (items.length) {
+            for (i = 0; i < groupLn; i++) {
+                firstGroupedRecord = groups[i].children[0];
+                index = store.indexOf(firstGroupedRecord);
+                item = items[index];
+                me.doAddHeader(item, store.getGroupString(firstGroupedRecord));
+                // Skip footer before the first Header
+                if (i) {
+                    Ext.fly(item.previousSibling).addCls(footerClsShortCache);
                 }
+                newHeaderItems.push(index);
             }
+            Ext.fly(items[items.length - 2]).addCls(footerClsShortCache);
+
         }
 
-        me.previousHeaderIndices = newHeaderIndices;
+        return newHeaderItems;
     },
 
+    /*
+        @private
+    */
+    doRemoveHeaders: function() {
+        var me = this,
+            i = 0,
+            existingHeaders = me.elementContainer.element.query(me.headerClsCache),
+            existingHeadersLn = existingHeaders.length,
+            item;
+
+        for (; i < existingHeadersLn; i++) {
+            item = existingHeaders[i];
+            Ext.fly(item.parentNode).removeCls(me.headerItemClsShortCache);
+            Ext.removeNode(item);
+        }
+    },
+
+    /*
+        @private
+    */
+    doRemoveFooterCls: function() {
+        var me = this,
+            i = 0,
+            footerClsCache = me.footerClsCache,
+            existingFooters = me.elementContainer.element.query(footerClsCache),
+            existingFootersLn = existingFooters.length;
+
+        for (; i < existingFootersLn; i++) {
+            Ext.fly(existingFooters[i]).removeCls(footerClsCache);
+        }
+    },
+
+    /*
+        @private
+    */
     doAddHeader: function(item, html) {
-        Ext.get(item).insertFirst(Ext.Element.create({
-            cls: this.getBaseCls() + '-header',
+        item = Ext.fly(item);
+        item.insertFirst(Ext.Element.create({
+            cls: this.headerClsShortCache,
             html: html
         }));
-    },
-
-    doRemoveHeader: function(item) {
-        item.removeChild(item.childNodes[0]);
-    },
-
-    doRefresh: function() {
-        this.callParent(arguments);
-        this.findGroupHeaderIndices();
-    },
-
-    onStoreAdd: function() {
-        this.callParent(arguments);
-        this.findGroupHeaderIndices();
-    },
-    onStoreRemove: function() {
-        this.callParent(arguments);
-        this.findGroupHeaderIndices();
-    },
-    onStoreUpdate: function() {
-        this.callParent(arguments);
-        this.findGroupHeaderIndices();
+        item.addCls(this.headerItemClsShortCache);
     }
+}, function() {
+    //TODO This is hacky, find a better way @Jacky
+    var prototype = this.prototype;
+
+    prototype.cachedConfigList = prototype.cachedConfigList.slice();
+    Ext.Array.remove(prototype.cachedConfigList, 'baseCls');
 });

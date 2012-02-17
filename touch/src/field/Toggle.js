@@ -4,50 +4,31 @@
  */
 Ext.define('Ext.field.Toggle', {
     extend: 'Ext.field.Slider',
-    alias : 'widget.togglefield',
+    xtype : 'togglefield',
     alternateClassName: 'Ext.form.Toggle',
+    requires: ['Ext.slider.Toggle'],
 
     config: {
         // @inherit
-        cls: 'x-toggle',
-
-        // @inherit
-        minValue: 0,
-
-        // @inherit
-        maxValue: 1,
-
-        /**
-         * @cfg {String} minValueCls CSS class added to the field when toggled to its minValue
-         * @accessor
-         */
-        minValueCls: Ext.baseCSSPrefix + 'toggle-off',
-
-        /**
-         * @cfg {String} maxValueCls CSS class added to the field when toggled to its maxValue
-         * @accessor
-         */
-        maxValueCls: Ext.baseCSSPrefix + 'toggle-on'
-
-        // // @inherit
-        // animationDuration: 70
+        cls: 'x-toggle-field'
     },
 
-    /**
-     * @private
-     */
-    onChange: function(thumb, newValue) {
-        var me     = this,
-            isOn   = newValue > 0,
-            onCls  = me.getMaxValueCls(),
-            offCls = me.getMinValueCls();
+    proxyConfig: {
+        /**
+         * @cfg {String} minValueCls See {@link Ext.slider.Toggle#minValueCls}
+         * @accessor
+         */
+        minValueCls: 'x-toggle-off',
 
-        this.addCls(isOn ? onCls : offCls);
-        this.removeCls(isOn ? offCls : onCls);
+        /**
+         * @cfg {String} maxValueCls  See {@link Ext.slider.Toggle#maxValueCls}
+         * @accessor
+         */
+        maxValueCls: 'x-toggle-on'
     },
 
-    onTap: function(e) {
-        var value = (this.getValue() > 0) ? 0 : 1;
-        this.setValue(value);
+    // @private
+    applyComponent: function(config) {
+        return Ext.factory(config, Ext.slider.Toggle);
     }
 });
